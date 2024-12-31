@@ -5,11 +5,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>net.bitbylogic</groupId>
-    <artifactId>bits-template</artifactId>
+    <artifactId>bits-menus</artifactId>
     <version>2024.12</version>
     <packaging>jar</packaging>
 
-    <name>Bit's Template</name>
+    <name>Bit's Menus</name>
 
     <properties>
         <java.version>21</java.version>
@@ -45,7 +45,11 @@
     </build>
 
     <repositories>
-
+        <!-- Spigot -->
+        <repository>
+            <id>spigotmc-repo</id>
+            <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
+        </repository>
     </repositories>
 
     <distributionManagement>
@@ -57,6 +61,14 @@
     </distributionManagement>
 
     <dependencies>
+        <!-- Spigot -->
+        <dependency>
+            <groupId>org.spigotmc</groupId>
+            <artifactId>spigot-api</artifactId>
+            <version>1.21.1-R0.1-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+
         <!-- IntelliJ Annotations -->
         <dependency>
             <groupId>com.intellij</groupId>
@@ -71,6 +83,20 @@
             <artifactId>lombok</artifactId>
             <version>1.18.34</version>
             <scope>provided</scope>
+        </dependency>
+
+        <!-- Bit's Utils Common -->
+        <dependency>
+            <groupId>net.bitbylogic</groupId>
+            <artifactId>bits-utils-common</artifactId>
+            <version>2024.12</version>
+        </dependency>
+
+        <!-- Bit's Utils Bukkit -->
+        <dependency>
+            <groupId>net.bitbylogic</groupId>
+            <artifactId>bits-utils-bukkit</artifactId>
+            <version>2024.12</version>
         </dependency>
     </dependencies>
 
