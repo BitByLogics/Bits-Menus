@@ -22,7 +22,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.13.0</version>
+                <version>3.8.1</version>
                 <configuration>
                     <source>${java.version}</source>
                     <target>${java.version}</target>
@@ -31,7 +31,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.6.0</version>
+                <version>3.3.0</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -50,15 +50,13 @@
             <id>spigotmc-repo</id>
             <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
         </repository>
-    </repositories>
 
-    <distributionManagement>
+        <!-- JitPack -->
         <repository>
-            <id>github</id>
-            <name>GitHub BitByLogics Maven Packages</name>
-            <url>https://maven.pkg.github.com/bitbylogics/bits-template</url>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
         </repository>
-    </distributionManagement>
+    </repositories>
 
     <dependencies>
         <!-- Spigot -->
@@ -87,16 +85,16 @@
 
         <!-- Bit's Utils Common -->
         <dependency>
-            <groupId>net.bitbylogic</groupId>
+            <groupId>com.github.BitByLogics.Bits-Utils</groupId>
             <artifactId>bits-utils-common</artifactId>
-            <version>2024.12</version>
+            <version>1.0.0</version>
         </dependency>
 
         <!-- Bit's Utils Bukkit -->
         <dependency>
-            <groupId>net.bitbylogic</groupId>
+            <groupId>com.github.BitByLogics.Bits-Utils</groupId>
             <artifactId>bits-utils-bukkit</artifactId>
-            <version>2024.12</version>
+            <version>1.0.0</version>
         </dependency>
     </dependencies>
 
