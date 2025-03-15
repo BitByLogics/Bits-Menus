@@ -19,6 +19,7 @@ public class MenuItemConfigParser implements ConfigParser<MenuItem> {
         String id = section.getName();
         ItemStack item = ItemStackUtil.getFromConfig(section);
         MenuItem menuItem = new MenuItem(id).item(item).updatable(section.getBoolean("Update", false));
+        menuItem.setLocked(false);
 
         if (!section.getStringList("Actions").isEmpty()) {
             HashMap<MenuClickActionType, String> internalActions = new HashMap<>();

@@ -14,6 +14,7 @@ public enum MenuFlag {
      * Prevent the menus inventories from having their titles updated
      */
     DISABLE_TITLE_UPDATE,
+    DISABLE_UPDATES,
     /**
      * Forces the inventory to always display its navigation items
      */

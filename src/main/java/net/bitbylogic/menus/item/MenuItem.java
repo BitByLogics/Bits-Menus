@@ -50,6 +50,8 @@ public class MenuItem implements Cloneable {
     private boolean updatable;
     @Setter
     private boolean locked;
+    @Setter
+    private boolean global = true;
     private boolean saved = true;
 
     public MenuItem(@NonNull String id) {

@@ -4,6 +4,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import net.bitbylogic.menus.Menu;
 import net.bitbylogic.menus.MenuData;
+import net.bitbylogic.menus.MenuFlag;
 import net.bitbylogic.menus.inventory.MenuInventory;
 import net.bitbylogic.menus.item.MenuItem;
 import net.bitbylogic.utils.StringModifier;
@@ -51,17 +52,8 @@ public class MenuUpdateTask {
             }
         }
 
-        Iterator<MenuItem> storedItemIterator = menu.getData().getItemStorage().iterator();
-
-        while(storedItemIterator.hasNext()) {
-            MenuItem storedItem = storedItemIterator.next();
-
-            if(storedItem.getSourceInventories().isEmpty() || storedItem.getSlots().isEmpty()) {
-               continue;
-            }
-
-            menu.addItem(storedItem);
-            storedItemIterator.remove();
+        if(menu.getData().hasFlag(MenuFlag.DISABLE_UPDATES)) {
+            return;
         }
 
         Iterator<MenuItem> itemIterator = menu.getItems().iterator();
@@ -69,7 +61,7 @@ public class MenuUpdateTask {
         while(itemIterator.hasNext()) {
             MenuItem menuItem = itemIterator.next();
 
-            if (menuItem.getSourceInventories().isEmpty() || menuItem.getSlots().isEmpty()) {
+            if (menuItem.getSlots().isEmpty()) {
                 menu.getData().getItemStorage().add(menuItem);
                 itemIterator.remove();
                 continue;

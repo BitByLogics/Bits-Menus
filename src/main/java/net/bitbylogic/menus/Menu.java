@@ -30,6 +30,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 @Getter
@@ -120,14 +121,18 @@ public class Menu implements InventoryHolder, Cloneable {
             generateInventories();
         }
 
-        item.setMenu(this);
-        items.add(item);
-
         Pair<Inventory, Integer> availableSlot = getNextAvailableSlot();
 
-        if (availableSlot == null) {
+        if(availableSlot == null) {
+            if(data.hasFlag(MenuFlag.DEBUG)) {
+                Bukkit.getLogger().log(Level.SEVERE, "Failed to find available slot for: " + item.getId());
+            }
+
             return;
         }
+
+        item.setMenu(this);
+        items.add(item);
 
         boolean locked = item.isLocked();
 
@@ -140,6 +145,8 @@ public class Menu implements InventoryHolder, Cloneable {
         item.withSlot(availableSlot.getValue());
         item.withSourceInventory(availableSlot.getKey());
         item.setLocked(locked);
+
+        availableSlot.getKey().setItem(availableSlot.getValue(), item.getItemUpdateProvider() == null ? item.getItem() : item.getItemUpdateProvider().requestItem(item));
     }
 
     public void addItemStack(ItemStack item) {
@@ -300,54 +307,82 @@ public class Menu implements InventoryHolder, Cloneable {
 
         List<MenuItem> itemCache = new ArrayList<>();
 
-        getData().getStoredItem("Next-Page-Item").ifPresent(nextPageItem -> {
+        getItem("Next-Page-Item").ifPresentOrElse(nextPageItem -> {
+            nextPageItem.setLocked(false);
+
             nextPageItem.setMenu(this);
             nextPageItem.withSourceInventory(inventory);
-
-            if (!data.hasFlag(MenuFlag.ALWAYS_DISPLAY_NAV)) {
-                nextPageItem.withViewRequirement(new NextPageViewRequirement());
-            }
-
-            nextPageItem.withAction(event -> {
-                Inventory currentInventory = event.getClickedInventory();
-                int nextIndex = getInventoryIndex(currentInventory) + 1;
-
-                if (nextIndex > getInventories().size() - 1) {
-                    return;
-                }
-
-                event.getWhoClicked().openInventory(getInventories().get(nextIndex).getInventory());
-            });
-
             nextPageItem.withSlots(getData().getMetadata().getValueAsOrDefault("Next-Page-Slots", new ArrayList<>()));
             nextPageItem.getSlots().forEach(slot -> availableSlots.get().remove(slot));
 
-            itemCache.add(nextPageItem);
-        });
+            nextPageItem.setLocked(true);
+        }, () -> {
+            getData().getStoredItem("Next-Page-Item").ifPresent(nextPageItem -> {
+                nextPageItem.setLocked(false);
+                nextPageItem.setMenu(this);
+                nextPageItem.withSourceInventory(inventory);
 
-        getData().getStoredItem("Previous-Page-Item").ifPresent(previousPageItem -> {
-            previousPageItem.setMenu(this);
-            previousPageItem.withSourceInventory(inventory);
-
-            if (!data.hasFlag(MenuFlag.ALWAYS_DISPLAY_NAV)) {
-                previousPageItem.withViewRequirement(new PreviousPageViewRequirement());
-            }
-
-            previousPageItem.withAction(event -> {
-                Inventory currentInventory = event.getClickedInventory();
-                int previousIndex = getInventoryIndex(currentInventory) - 1;
-
-                if (previousIndex <= -1) {
-                    return;
+                if (!data.hasFlag(MenuFlag.ALWAYS_DISPLAY_NAV)) {
+                    nextPageItem.withViewRequirement(new NextPageViewRequirement());
                 }
 
-                event.getWhoClicked().openInventory(getInventories().get(previousIndex).getInventory());
-            });
+                nextPageItem.withAction(event -> {
+                    Inventory currentInventory = event.getClickedInventory();
+                    int nextIndex = getInventoryIndex(currentInventory) + 1;
 
+                    if (nextIndex > getInventories().size() - 1) {
+                        return;
+                    }
+
+                    event.getWhoClicked().openInventory(getInventories().get(nextIndex).getInventory());
+                });
+
+                nextPageItem.withSlots(getData().getMetadata().getValueAsOrDefault("Next-Page-Slots", new ArrayList<>()));
+                nextPageItem.getSlots().forEach(slot -> availableSlots.get().remove(slot));
+                nextPageItem.setLocked(true);
+                nextPageItem.setGlobal(false);
+
+                itemCache.add(nextPageItem);
+            });
+        });
+
+        getItem("Previous-Page-Item").ifPresentOrElse(previousPageItem -> {
+            previousPageItem.setLocked(false);
+
+            previousPageItem.setMenu(this);
+            previousPageItem.withSourceInventory(inventory);
             previousPageItem.withSlots(getData().getMetadata().getValueAsOrDefault("Previous-Page-Slots", new ArrayList<>()));
             previousPageItem.getSlots().forEach(slot -> availableSlots.get().remove(slot));
 
-            itemCache.add(previousPageItem);
+            previousPageItem.setLocked(true);
+        }, () -> {
+            getData().getStoredItem("Previous-Page-Item").ifPresent(previousPageItem -> {
+                previousPageItem.setLocked(false);
+                previousPageItem.setMenu(this);
+                previousPageItem.withSourceInventory(inventory);
+
+                if (!data.hasFlag(MenuFlag.ALWAYS_DISPLAY_NAV)) {
+                    previousPageItem.withViewRequirement(new PreviousPageViewRequirement());
+                }
+
+                previousPageItem.withAction(event -> {
+                    Inventory currentInventory = event.getClickedInventory();
+                    int previousIndex = getInventoryIndex(currentInventory) - 1;
+
+                    if (previousIndex <= -1) {
+                        return;
+                    }
+
+                    event.getWhoClicked().openInventory(getInventories().get(previousIndex).getInventory());
+                });
+
+                previousPageItem.withSlots(getData().getMetadata().getValueAsOrDefault("Previous-Page-Slots", new ArrayList<>()));
+                previousPageItem.getSlots().forEach(slot -> availableSlots.get().remove(slot));
+                previousPageItem.setLocked(true);
+                previousPageItem.setGlobal(false);
+
+                itemCache.add(previousPageItem);
+            });
         });
 
         items.forEach(menuItem -> {
@@ -364,6 +399,10 @@ public class Menu implements InventoryHolder, Cloneable {
                 ItemStackUtil.updateItem(item, placeholders.toArray(new StringModifier[]{}));
             }
 
+            if(!menuItem.getSourceInventories().isEmpty() && !menuItem.isGlobal()) {
+                return;
+            }
+
             if (!menuItem.getSlots().isEmpty()) {
                 menuItem.withSourceInventory(inventory);
                 menuItem.getSlots().forEach(slot -> {
@@ -376,6 +415,10 @@ public class Menu implements InventoryHolder, Cloneable {
                     inventory.setItem(slot, item);
                 });
 
+                return;
+            }
+
+            if(availableSlots.get().isEmpty()) {
                 return;
             }
 
@@ -509,6 +552,13 @@ public class Menu implements InventoryHolder, Cloneable {
     public Pair<Inventory, Integer> getNextAvailableSlot() {
         if (inventories.isEmpty()) {
             generateInventories();
+        }
+
+        if(inventories.stream().noneMatch(MenuInventory::hasSpace)) {
+            Optional<MenuInventory> optionalMenuInventory = generateNewInventory();
+            optionalMenuInventory.ifPresent(inventories::add);
+
+            return optionalMenuInventory.map(menuInventory -> new Pair<>(menuInventory.getInventory(), data.getValidSlots().getFirst())).orElse(null);
         }
 
         for (MenuInventory inventory : inventories) {
