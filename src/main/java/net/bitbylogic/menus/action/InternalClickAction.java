@@ -2,15 +2,17 @@ package net.bitbylogic.menus.action;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NonNull;
 import net.bitbylogic.utils.Placeholder;
 import net.bitbylogic.utils.RichTextUtil;
 import net.bitbylogic.utils.message.format.Formatter;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryClickEvent;
 
 @Getter
 @AllArgsConstructor
-public enum MenuClickActionType {
+public enum InternalClickAction {
 
     RUN_CONSOLE_COMMAND((event, args) -> {
         for (String command : RichTextUtil.getRichText(args, 0)) {
@@ -28,16 +30,22 @@ public enum MenuClickActionType {
         }
     });
 
-    private final ClickTypeAction action;
+    private final Action action;
 
-    public static MenuClickActionType parseType(String name) {
-        for (MenuClickActionType type : values()) {
+    public static InternalClickAction parseType(String name) {
+        for (InternalClickAction type : values()) {
             if (type.name().equalsIgnoreCase(name)) {
                 return type;
             }
         }
 
         return null;
+    }
+
+    public interface Action {
+
+        void onClick(@NonNull InventoryClickEvent event, @NonNull String args);
+
     }
 
 }

@@ -4,6 +4,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
+import net.bitbylogic.menus.data.MenuData;
 import net.bitbylogic.menus.inventory.MenuInventory;
 import net.bitbylogic.menus.item.MenuItem;
 import net.bitbylogic.menus.task.MenuUpdateTask;

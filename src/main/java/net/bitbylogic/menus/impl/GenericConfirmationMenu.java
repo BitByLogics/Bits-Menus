@@ -3,8 +3,8 @@ package net.bitbylogic.menus.impl;
 import lombok.Getter;
 import lombok.NonNull;
 import net.bitbylogic.menus.Menu;
-import net.bitbylogic.menus.MenuAction;
-import net.bitbylogic.menus.MenuData;
+import net.bitbylogic.menus.action.ClickAction;
+import net.bitbylogic.menus.data.MenuData;
 import net.bitbylogic.utils.Placeholder;
 import net.bitbylogic.utils.item.ItemBuilder;
 import org.bukkit.Material;
@@ -31,7 +31,7 @@ public class GenericConfirmationMenu {
                                 .withModifier(questionPlaceholder)
                 ));
 
-        MenuAction confirmAction = event -> {
+        ClickAction confirmAction = event -> {
             if (menu.getData().getMetadata().containsKey("completed")) {
                 return;
             }
@@ -41,7 +41,7 @@ public class GenericConfirmationMenu {
             event.getWhoClicked().closeInventory();
         };
 
-        MenuAction cancelAction = event -> {
+        ClickAction cancelAction = event -> {
             if (menu.getData().getMetadata().containsKey("completed")) {
                 return;
             }

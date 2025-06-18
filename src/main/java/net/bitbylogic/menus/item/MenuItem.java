@@ -4,16 +4,18 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
 import net.bitbylogic.menus.Menu;
-import net.bitbylogic.menus.MenuAction;
-import net.bitbylogic.menus.action.MenuClickActionType;
-import net.bitbylogic.menus.action.MenuClickRequirement;
+import net.bitbylogic.menus.action.ClickAction;
+import net.bitbylogic.menus.action.InternalClickAction;
+import net.bitbylogic.menus.requirement.ClickRequirement;
 import net.bitbylogic.menus.view.MenuViewRequirement;
 import net.bitbylogic.utils.GenericHashMap;
+import net.bitbylogic.utils.cooldown.CooldownUtil;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -21,6 +23,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 @Getter
 public class MenuItem implements Cloneable {
@@ -32,10 +35,10 @@ public class MenuItem implements Cloneable {
     private final @NonNull List<Integer> slots;
     private final @NotNull List<Inventory> sourceInventories;
 
-    private final @NotNull List<MenuAction> actions;
-    private final @NotNull HashMap<MenuClickActionType, String> internalActions;
+    private final @NotNull List<ClickAction> actions;
+    private final @NotNull HashMap<InternalClickAction, String> internalActions;
 
-    private final @NotNull List<MenuClickRequirement> clickRequirements;
+    private final @NotNull List<ClickRequirement> clickRequirements;
     private final @NotNull List<MenuViewRequirement> viewRequirements;
 
     private final @NonNull GenericHashMap<String, Object> metadata;
@@ -48,11 +51,18 @@ public class MenuItem implements Cloneable {
 
     private boolean filler;
     private boolean updatable;
+
     @Setter
     private boolean locked;
+
     @Setter
     private boolean global = true;
+
+    private boolean saveSlots = true;
     private boolean saved = true;
+
+    private int clickCooldownTime = 200;
+    private TimeUnit clickCooldownUnit = TimeUnit.MILLISECONDS;
 
     public MenuItem(@NonNull String id) {
         this.id = id;
@@ -70,8 +80,8 @@ public class MenuItem implements Cloneable {
     }
 
     public MenuItem(@NotNull String id, @NonNull List<Integer> slots, @NotNull List<Inventory> sourceInventories,
-                    @NotNull List<MenuAction> actions, @NotNull HashMap<MenuClickActionType, String> internalActions,
-                    @NotNull List<MenuClickRequirement> clickRequirements, @NotNull List<MenuViewRequirement> viewRequirements,
+                    @NotNull List<ClickAction> actions, @NotNull HashMap<InternalClickAction, String> internalActions,
+                    @NotNull List<ClickRequirement> clickRequirements, @NotNull List<MenuViewRequirement> viewRequirements,
                     @NonNull GenericHashMap<String, Object> metadata, @Nullable ItemStack item,
                     @Nullable MenuItemUpdateProvider itemUpdateProvider, boolean filler, boolean updatable, boolean saved) {
         this.id = id;
@@ -118,17 +128,17 @@ public class MenuItem implements Cloneable {
         return this;
     }
 
-    public MenuItem withAction(@NonNull MenuAction action) {
+    public MenuItem withAction(@NonNull ClickAction action) {
         actions.add(action);
         return this;
     }
 
-    public MenuItem withActions(@NonNull List<MenuAction> actions) {
+    public MenuItem withActions(@NonNull List<ClickAction> actions) {
         this.actions.addAll(actions);
         return this;
     }
 
-    public MenuItem withInternalAction(@NonNull MenuClickActionType actionType, @NonNull String data) {
+    public MenuItem withInternalAction(@NonNull InternalClickAction actionType, @NonNull String data) {
         if(locked) {
             return this;
         }
@@ -137,7 +147,7 @@ public class MenuItem implements Cloneable {
         return this;
     }
 
-    public MenuItem withInternalActions(@NonNull HashMap<MenuClickActionType, String> internalActions) {
+    public MenuItem withInternalActions(@NonNull HashMap<InternalClickAction, String> internalActions) {
         if(locked) {
             return this;
         }
@@ -146,12 +156,12 @@ public class MenuItem implements Cloneable {
         return this;
     }
 
-    public MenuItem withClickRequirement(@NonNull MenuClickRequirement requirement) {
+    public MenuItem withClickRequirement(@NonNull ClickRequirement requirement) {
         this.clickRequirements.add(requirement);
         return this;
     }
 
-    public MenuItem withClickRequirement(@NonNull List<MenuClickRequirement> clickRequirements) {
+    public MenuItem withClickRequirement(@NonNull List<ClickRequirement> clickRequirements) {
         this.clickRequirements.addAll(clickRequirements);
         return this;
     }
@@ -216,15 +226,36 @@ public class MenuItem implements Cloneable {
         return this;
     }
 
+    public MenuItem saveSlots(boolean saveSlots) {
+        this.saveSlots = saveSlots;
+        return this;
+    }
+
     public MenuItem updateProvider(@NonNull MenuItemUpdateProvider updateProvider) {
         this.itemUpdateProvider = updateProvider;
         return this;
     }
 
-    public void onClick(@NonNull InventoryClickEvent event) {
+    public MenuItem withClickCooldownTime(int cooldownTime) {
+        this.clickCooldownTime = cooldownTime;
+        return this;
+    }
+
+    public MenuItem withClickCooldownUnit(@NonNull TimeUnit unit) {
+        this.clickCooldownUnit = unit;
+        return this;
+    }
+
+    public void onClick(@NonNull InventoryClickEvent event, @NonNull JavaPlugin plugin) {
         if (clickRequirements.stream().anyMatch(requirement -> !requirement.canClick((Player) event.getWhoClicked()))) {
             return;
         }
+
+        if(CooldownUtil.hasCooldown(id + "-" + event.getSlot(), event.getWhoClicked().getUniqueId())) {
+            return;
+        }
+
+        CooldownUtil.startCooldown(plugin, id + "-" + event.getSlot(), event.getWhoClicked().getUniqueId(), clickCooldownTime, clickCooldownUnit);
 
         internalActions.keySet().forEach(action -> action.getAction().onClick(event, internalActions.get(action)));
         actions.forEach(action -> action.onClick(event));

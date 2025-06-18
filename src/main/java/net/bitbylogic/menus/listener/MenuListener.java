@@ -4,6 +4,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import net.bitbylogic.menus.Menu;
 import net.bitbylogic.menus.MenuFlag;
+import net.bitbylogic.menus.item.MenuItem;
 import net.bitbylogic.utils.inventory.InventoryUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -13,6 +14,9 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.*;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @RequiredArgsConstructor
 public class MenuListener implements Listener {
@@ -55,13 +59,19 @@ public class MenuListener implements Listener {
             return;
         }
 
+        if(menu.getData().getClickAction() != null) {
+            menu.getData().getClickAction().onClick(event);
+        }
+
         if (menu.getItem(topInventory, event.getSlot()).isEmpty() && (event.getCursor() == null || event.getCursor().getType() == Material.AIR) && menu.getData().hasFlag(MenuFlag.ALLOW_REMOVAL)) {
             return;
         }
 
         event.setCancelled(menu.getItem(topInventory, event.getSlot()).isPresent() || !menu.getData().hasFlag(MenuFlag.ALLOW_INPUT));
 
-        menu.getItems(topInventory, event.getSlot()).forEach(menuItem -> {
+        List<MenuItem> clickedItemsCopy = new ArrayList<>(menu.getItems(topInventory, event.getSlot()));
+
+        clickedItemsCopy.forEach(menuItem -> {
             if (menuItem.getViewRequirements().stream().anyMatch(requirement -> !requirement.canView(topInventory, menuItem, menu))) {
                 return;
             }
@@ -70,7 +80,16 @@ public class MenuListener implements Listener {
                 return;
             }
 
-            menuItem.onClick(event);
+            menuItem.onClick(event, plugin);
+
+            List<Inventory> sourceInventoriesCopy = new ArrayList<>(menuItem.getSourceInventories());
+
+            sourceInventoriesCopy.forEach(inventory -> {
+                List<Integer> slotsCopy = new ArrayList<>(menuItem.getSlots());
+                slotsCopy.forEach(slot ->
+                        inventory.setItem(slot, menuItem.getItemUpdateProvider() == null ? menuItem.getItem().clone() : menuItem.getItemUpdateProvider().requestItem(menuItem))
+                );
+            });
         });
     }
 

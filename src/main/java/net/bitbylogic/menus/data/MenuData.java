@@ -1,6 +1,9 @@
-package net.bitbylogic.menus;
+package net.bitbylogic.menus.data;
 
 import lombok.*;
+import net.bitbylogic.menus.MenuCloseAction;
+import net.bitbylogic.menus.MenuFlag;
+import net.bitbylogic.menus.action.ClickAction;
 import net.bitbylogic.menus.item.MenuItem;
 import net.bitbylogic.utils.GenericHashMap;
 import net.bitbylogic.utils.PlaceholderProvider;
@@ -18,7 +21,8 @@ import java.util.Optional;
 public class MenuData implements Cloneable {
 
     private @Nullable MenuCloseAction closeAction;
-    private @Nullable MenuAction externalClickAction;
+    private @Nullable ClickAction externalClickAction;
+    private @Nullable ClickAction clickAction;
 
     private int minInventories = 1;
     private int maxInventories = -1;
@@ -48,8 +52,13 @@ public class MenuData implements Cloneable {
         return this;
     }
 
-    public MenuData withExternalClickAction(@NonNull MenuAction externalClickAction) {
+    public MenuData withExternalClickAction(@NonNull ClickAction externalClickAction) {
         this.externalClickAction = externalClickAction;
+        return this;
+    }
+
+    public MenuData withClickAction(@NonNull ClickAction clickAction) {
+        this.clickAction = clickAction;
         return this;
     }
 
@@ -155,7 +164,7 @@ public class MenuData implements Cloneable {
         GenericHashMap<String, Object> metadata = new GenericHashMap<>();
         metadata.putAll(this.metadata);
 
-        return new MenuData(closeAction, externalClickAction, minInventories,
+        return new MenuData(closeAction, externalClickAction, clickAction, minInventories,
                 maxInventories, itemStorage, new ArrayList<>(flags), new ArrayList<>(validSlots),
                 new ArrayList<>(placeholderProviders), new ArrayList<>(modifiers), metadata);
     }

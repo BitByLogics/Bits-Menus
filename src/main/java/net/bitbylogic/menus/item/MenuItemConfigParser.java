@@ -1,7 +1,7 @@
 package net.bitbylogic.menus.item;
 
 import lombok.NonNull;
-import net.bitbylogic.menus.action.MenuClickActionType;
+import net.bitbylogic.menus.action.InternalClickAction;
 import net.bitbylogic.utils.config.ConfigParser;
 import net.bitbylogic.utils.item.ItemStackUtil;
 import org.bukkit.configuration.ConfigurationSection;
@@ -22,10 +22,10 @@ public class MenuItemConfigParser implements ConfigParser<MenuItem> {
         menuItem.setLocked(false);
 
         if (!section.getStringList("Actions").isEmpty()) {
-            HashMap<MenuClickActionType, String> internalActions = new HashMap<>();
+            HashMap<InternalClickAction, String> internalActions = new HashMap<>();
             section.getStringList("Actions").forEach(action -> {
                 String[] data = action.split(":");
-                MenuClickActionType type = MenuClickActionType.parseType(data[0]);
+                InternalClickAction type = InternalClickAction.parseType(data[0]);
                 internalActions.put(type, data[1]);
             });
 
@@ -67,8 +67,8 @@ public class MenuItemConfigParser implements ConfigParser<MenuItem> {
         }
 
         List<String> actions = new ArrayList<>();
-        menuItem.getInternalActions().forEach((menuClickActionType, s) -> {
-            actions.add(menuClickActionType.name() + ":" + s);
+        menuItem.getInternalActions().forEach((internalClickAction, s) -> {
+            actions.add(internalClickAction.name() + ":" + s);
         });
 
         if(!actions.isEmpty()) {
@@ -88,6 +88,10 @@ public class MenuItemConfigParser implements ConfigParser<MenuItem> {
         }
 
         if(menuItem.getSlots().isEmpty()) {
+            return section;
+        }
+
+        if(!menuItem.isSaveSlots()) {
             return section;
         }
 

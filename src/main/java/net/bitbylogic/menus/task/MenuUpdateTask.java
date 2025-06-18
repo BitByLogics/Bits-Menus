@@ -3,7 +3,7 @@ package net.bitbylogic.menus.task;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import net.bitbylogic.menus.Menu;
-import net.bitbylogic.menus.MenuData;
+import net.bitbylogic.menus.data.MenuData;
 import net.bitbylogic.menus.MenuFlag;
 import net.bitbylogic.menus.inventory.MenuInventory;
 import net.bitbylogic.menus.item.MenuItem;
@@ -110,13 +110,22 @@ public class MenuUpdateTask {
                     return;
                 }
 
+                fillerItem.setLocked(false);
+
                 for (int i = 0; i < inventory.getSize(); i++) {
-                    if (inventory.getItem(i) != null || menu.getData().getValidSlots().contains(i)) {
+                    if (fillerItem.getSlots().contains(i) || inventory.getItem(i) != null || menu.getData().getValidSlots().contains(i)) {
                         continue;
                     }
 
+                    if(!fillerItem.getSourceInventories().contains(inventory)) {
+                        fillerItem.withSourceInventory(inventory);
+                    }
+
+                    fillerItem.withSlot(i);
                     inventory.setItem(i, fillerItem.getItem());
                 }
+
+                fillerItem.setLocked(true);
             });
         }
     }

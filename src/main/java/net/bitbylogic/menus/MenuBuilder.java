@@ -3,6 +3,7 @@ package net.bitbylogic.menus;
 import com.google.common.base.Preconditions;
 import lombok.Getter;
 import lombok.NonNull;
+import net.bitbylogic.menus.data.MenuData;
 import net.bitbylogic.menus.item.MenuItem;
 
 import java.util.ArrayList;

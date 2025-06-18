@@ -1,6 +1,7 @@
 package net.bitbylogic.menus;
 
 import lombok.NonNull;
+import net.bitbylogic.menus.data.MenuData;
 import net.bitbylogic.menus.item.MenuItem;
 import net.bitbylogic.utils.config.ConfigParser;
 import net.bitbylogic.utils.message.format.Formatter;
@@ -9,13 +10,14 @@ import org.bukkit.configuration.ConfigurationSection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 public class MenuConfigParser implements ConfigParser<Menu> {
 
     @Override
     public Optional<Menu> parseFrom(@NonNull ConfigurationSection section) {
         MenuBuilder builder = new MenuBuilder(
-                section.getName(),
+                section.getString("Id", UUID.randomUUID().toString()),
                 Formatter.format(section.getString("Title", "Inventory")),
                 section.getInt("Size", 9)
         );
@@ -57,6 +59,7 @@ public class MenuConfigParser implements ConfigParser<Menu> {
 
     @Override
     public ConfigurationSection parseTo(@NonNull ConfigurationSection section, @NonNull Menu menu) {
+        section.set("Id", menu.getId());
         section.set("Title", menu.getTitle());
         section.set("Size", menu.getSize());
 
