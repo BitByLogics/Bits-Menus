@@ -21,6 +21,7 @@ import net.bitbylogic.utils.message.format.Formatter;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
@@ -29,6 +30,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
@@ -38,6 +41,7 @@ import java.util.stream.Collectors;
 @Setter
 public class Menu implements InventoryHolder, Cloneable {
 
+    private static final String MENU_CONFIG_PATH = "menus/%s.yml";
     private static final MenuConfigParser CONFIG_PARSER = new MenuConfigParser();
 
     private final String id;
@@ -89,6 +93,35 @@ public class Menu implements InventoryHolder, Cloneable {
 
         titleUpdateTask = new TitleUpdateTask(this);
         updateTask = new MenuUpdateTask(this);
+    }
+
+    public static Optional<Menu> getFromFile(@NonNull File directory, @NonNull String id) {
+        File file = new File(directory, String.format(MENU_CONFIG_PATH, id));
+
+        if (!file.exists() || file.isDirectory()) {
+            return Optional.empty();
+        }
+
+        YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+        return CONFIG_PARSER.parseFrom(config);
+    }
+
+    public void saveToFile(@NonNull File directory) {
+        File file = new File(directory, String.format(MENU_CONFIG_PATH, getId()));
+
+        File parent = file.getParentFile();
+        if (!parent.exists()) {
+            parent.mkdirs();
+        }
+
+        YamlConfiguration config = new YamlConfiguration();
+        CONFIG_PARSER.parseTo(config, this);
+
+        try {
+            config.save(file);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public static Optional<Menu> getFromConfig(@Nullable ConfigurationSection section) {
