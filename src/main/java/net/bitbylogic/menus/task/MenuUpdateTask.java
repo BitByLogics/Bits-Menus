@@ -69,7 +69,13 @@ public class MenuUpdateTask {
 
             menuItem.getSourceInventories().forEach(inventory -> {
                 if (menuItem.getViewRequirements().stream().anyMatch(requirement -> !requirement.canView(inventory, menuItem, menu))) {
-                    menuItem.getSlots().forEach(slot -> inventory.setItem(slot, null));
+                    menuItem.getSlots().forEach(slot -> {
+                        if(inventory.getItem(slot) == null || !ItemStackUtil.isSimilar(inventory.getItem(slot), menuItem.getItem(), true, true, true)) {
+                            return;
+                        }
+
+                        inventory.setItem(slot, null);
+                    });
                     return;
                 }
 
