@@ -57,7 +57,7 @@ public class TitleUpdateTask {
             new ArrayList<>(inventory.getViewers()).forEach(viewer -> {
                 String newTitle = Formatter.format(menuInventory.getTitle(), finalModifiers.toArray(new StringModifier[]{}));
 
-                if (viewer.getOpenInventory().getTitle().equalsIgnoreCase(newTitle)) {
+                if (viewer.getOpenInventory().getTopInventory() != inventory || viewer.getOpenInventory().getTitle().equalsIgnoreCase(newTitle)) {
                     return;
                 }
 

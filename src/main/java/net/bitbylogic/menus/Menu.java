@@ -361,6 +361,7 @@ public class Menu implements InventoryHolder, Cloneable {
             getItem("Next-Page-Item").ifPresentOrElse(nextPageItem -> {
                 nextPageItem.setLocked(false);
 
+                nextPageItem.saved(false);
                 nextPageItem.setMenu(this);
                 nextPageItem.withSourceInventory(inventory);
                 nextPageItem.withSlots(getData().getMetadata().getValueAsOrDefault("Next-Page-Slots", new ArrayList<>()));
@@ -374,6 +375,7 @@ public class Menu implements InventoryHolder, Cloneable {
             }, () -> {
                 getData().getStoredItem("Next-Page-Item").ifPresent(nextPageItem -> {
                     nextPageItem.setLocked(false);
+                    nextPageItem.saved(false);
                     nextPageItem.setMenu(this);
                     nextPageItem.withSourceInventory(inventory);
 
@@ -408,6 +410,7 @@ public class Menu implements InventoryHolder, Cloneable {
             getItem("Previous-Page-Item").ifPresentOrElse(previousPageItem -> {
                 previousPageItem.setLocked(false);
 
+                previousPageItem.saved(false);
                 previousPageItem.setMenu(this);
                 previousPageItem.withSourceInventory(inventory);
                 previousPageItem.withSlots(getData().getMetadata().getValueAsOrDefault("Previous-Page-Slots", new ArrayList<>()));
@@ -421,6 +424,7 @@ public class Menu implements InventoryHolder, Cloneable {
             }, () -> {
                 getData().getStoredItem("Previous-Page-Item").ifPresent(previousPageItem -> {
                     previousPageItem.setLocked(false);
+                    previousPageItem.saved(false);
                     previousPageItem.setMenu(this);
                     previousPageItem.withSourceInventory(inventory);
 
@@ -510,6 +514,7 @@ public class Menu implements InventoryHolder, Cloneable {
                 }
 
                 fillerItem.setLocked(false);
+                fillerItem.saved(false);
 
                 for (int i = 0; i < inventory.getSize(); i++) {
                     if (fillerItem.getSlots().contains(i) || inventory.getItem(i) != null || getData().getValidSlots().contains(i)) {
