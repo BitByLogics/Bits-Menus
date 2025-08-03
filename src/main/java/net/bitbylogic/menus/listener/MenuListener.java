@@ -52,6 +52,7 @@ public class MenuListener implements Listener {
         if (event.getClickedInventory() == bottomInventory) {
             if (menu.getData().getExternalClickAction() != null) {
                 if(CooldownUtil.hasCooldown(menu.getId() + "exc-" + event.getSlot(), event.getWhoClicked().getUniqueId())) {
+                    event.setCancelled(!menu.getData().hasFlag(MenuFlag.LOWER_INTERACTION));
                     return;
                 }
 
