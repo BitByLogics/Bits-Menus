@@ -258,7 +258,7 @@ public class MenuItem implements Cloneable {
         CooldownUtil.startCooldown(plugin, id + "-" + event.getSlot(), event.getWhoClicked().getUniqueId(), clickCooldownTime, clickCooldownUnit);
 
         internalActions.keySet().forEach(action -> action.getAction().onClick(event, internalActions.get(action)));
-        actions.forEach(action -> action.onClick(event));
+        new ArrayList<>(actions).forEach(action -> action.onClick(event));
     }
 
     public boolean saveToConfig(@NonNull ConfigurationSection section) {
