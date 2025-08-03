@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import net.bitbylogic.menus.Menu;
 import net.bitbylogic.menus.MenuFlag;
 import net.bitbylogic.menus.item.MenuItem;
+import net.bitbylogic.utils.cooldown.CooldownUtil;
 import net.bitbylogic.utils.inventory.InventoryUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -17,11 +18,13 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @RequiredArgsConstructor
 public class MenuListener implements Listener {
 
     private final JavaPlugin plugin;
+    private final TimeUnit clickCooldownUnit = TimeUnit.MILLISECONDS;
 
     @EventHandler
     public void onMenuClick(InventoryClickEvent event) {
@@ -48,6 +51,13 @@ public class MenuListener implements Listener {
 
         if (event.getClickedInventory() == bottomInventory) {
             if (menu.getData().getExternalClickAction() != null) {
+                if(CooldownUtil.hasCooldown(menu.getId() + "exc-" + event.getSlot(), event.getWhoClicked().getUniqueId())) {
+                    return;
+                }
+
+                int clickCooldownTime = 200;
+                CooldownUtil.startCooldown(plugin, menu.getId() + "exc-" + event.getSlot(), event.getWhoClicked().getUniqueId(), clickCooldownTime, clickCooldownUnit);
+
                 menu.getData().getExternalClickAction().onClick(event);
             }
 
