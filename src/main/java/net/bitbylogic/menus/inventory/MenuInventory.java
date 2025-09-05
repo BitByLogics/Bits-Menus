@@ -4,8 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import net.bitbylogic.menus.Menu;
-import net.bitbylogic.utils.inventory.InventoryUtil;
-import net.bitbylogic.utils.item.ItemStackUtil;
 import org.bukkit.inventory.Inventory;
 
 @Getter @Setter
@@ -20,7 +18,7 @@ public class MenuInventory {
     }
 
     public boolean hasSpace() {
-        return InventoryUtil.hasSpace(inventory, null, getMenu().getData().getValidSlots());
+        return getMenu().getData().getValidSlots().stream().anyMatch(slot -> inventory.getItem(slot) == null);
     }
 
 }
