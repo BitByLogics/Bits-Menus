@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit;
 @Getter
 public class MenuItem implements Cloneable {
 
-    private static final MenuItemConfigParser CONFIG_PARSER = new MenuItemConfigParser();
+    private static final MenuItemSerializer SERIALIZER = new MenuItemSerializer();
 
     private final @NotNull String id;
 
@@ -276,7 +276,7 @@ public class MenuItem implements Cloneable {
             itemSection = section.createSection(id);
         }
 
-        CONFIG_PARSER.parseTo(itemSection, this);
+        SERIALIZER.serialize(itemSection, this);
         return true;
     }
 
@@ -285,7 +285,7 @@ public class MenuItem implements Cloneable {
             return Optional.empty();
         }
 
-        return CONFIG_PARSER.parseFrom(section);
+        return SERIALIZER.deserialize(section);
     }
 
     public MenuItem clone() {

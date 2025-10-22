@@ -2,7 +2,7 @@ package net.bitbylogic.menus.item;
 
 import lombok.NonNull;
 import net.bitbylogic.menus.action.InternalClickAction;
-import net.bitbylogic.utils.config.ConfigParser;
+import net.bitbylogic.utils.config.ConfigSerializer;
 import net.bitbylogic.utils.item.ItemStackUtil;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.ItemStack;
@@ -12,10 +12,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
-public class MenuItemConfigParser implements ConfigParser<MenuItem> {
+public class MenuItemSerializer implements ConfigSerializer<MenuItem> {
 
     @Override
-    public Optional<MenuItem> parseFrom(@NonNull ConfigurationSection section) {
+    public Optional<MenuItem> deserialize(@NonNull ConfigurationSection section) {
         String id = section.getName();
         ItemStack item = ItemStackUtil.getFromConfig(section);
         MenuItem menuItem = new MenuItem(id).item(item).updatable(section.getBoolean("Update", false));
@@ -61,7 +61,7 @@ public class MenuItemConfigParser implements ConfigParser<MenuItem> {
     }
 
     @Override
-    public ConfigurationSection parseTo(@NonNull ConfigurationSection section, @NonNull MenuItem menuItem) {
+    public ConfigurationSection serialize(@NonNull ConfigurationSection section, @NonNull MenuItem menuItem) {
         if(menuItem.isUpdatable()) {
             section.set("Update", true);
         }

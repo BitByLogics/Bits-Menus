@@ -3,7 +3,7 @@ package net.bitbylogic.menus;
 import lombok.NonNull;
 import net.bitbylogic.menus.data.MenuData;
 import net.bitbylogic.menus.item.MenuItem;
-import net.bitbylogic.utils.config.ConfigParser;
+import net.bitbylogic.utils.config.ConfigSerializer;
 import net.bitbylogic.utils.message.format.Formatter;
 import org.bukkit.configuration.ConfigurationSection;
 
@@ -12,10 +12,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public class MenuConfigParser implements ConfigParser<Menu> {
+public class MenuSerializer implements ConfigSerializer<Menu> {
 
     @Override
-    public Optional<Menu> parseFrom(@NonNull ConfigurationSection section) {
+    public Optional<Menu> deserialize(@NonNull ConfigurationSection section) {
         MenuBuilder builder = new MenuBuilder(
                 section.getString("Id", UUID.randomUUID().toString()),
                 Formatter.format(section.getString("Title", "Inventory")),
@@ -58,7 +58,7 @@ public class MenuConfigParser implements ConfigParser<Menu> {
     }
 
     @Override
-    public ConfigurationSection parseTo(@NonNull ConfigurationSection section, @NonNull Menu menu) {
+    public ConfigurationSection serialize(@NonNull ConfigurationSection section, @NonNull Menu menu) {
         section.set("Id", menu.getId());
         section.set("Title", menu.getTitle());
         section.set("Size", menu.getSize());

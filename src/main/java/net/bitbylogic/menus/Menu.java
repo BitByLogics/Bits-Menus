@@ -43,7 +43,7 @@ import java.util.stream.Collectors;
 @Setter
 public class Menu implements InventoryHolder, Cloneable {
 
-    private static final MenuConfigParser CONFIG_PARSER = new MenuConfigParser();
+    private static final MenuSerializer SERIALIZER = new MenuSerializer();
     private static final String MENU_CONFIG_PATH = "menus/%s.yml";
 
     private final String id;
@@ -110,7 +110,7 @@ public class Menu implements InventoryHolder, Cloneable {
         }
 
         YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
-        return CONFIG_PARSER.parseFrom(config);
+        return SERIALIZER.deserialize(config);
     }
 
     public static Optional<Menu> getFromConfig(@Nullable ConfigurationSection section) {
@@ -118,7 +118,7 @@ public class Menu implements InventoryHolder, Cloneable {
             return Optional.empty();
         }
 
-        return CONFIG_PARSER.parseFrom(section);
+        return SERIALIZER.deserialize(section);
     }
 
     /**
@@ -763,7 +763,7 @@ public class Menu implements InventoryHolder, Cloneable {
         }
 
         YamlConfiguration config = new YamlConfiguration();
-        CONFIG_PARSER.parseTo(config, this);
+        SERIALIZER.serialize(config, this);
 
         try {
             config.save(file);
@@ -791,7 +791,7 @@ public class Menu implements InventoryHolder, Cloneable {
                 return false;
             }
 
-            CONFIG_PARSER.parseTo(section.createSection(id), this);
+            SERIALIZER.serialize(section.createSection(id), this);
             return true;
         } finally {
             readLock.unlock();
