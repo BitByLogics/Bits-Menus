@@ -758,6 +758,10 @@ public class Menu implements InventoryHolder, Cloneable {
     public void saveToFile(@NonNull File directory) {
         File file = new File(directory, String.format(MENU_CONFIG_PATH, getId()));
 
+        if(file.exists()) {
+            return;
+        }
+
         File parent = file.getParentFile();
 
         if (!parent.exists()) {
