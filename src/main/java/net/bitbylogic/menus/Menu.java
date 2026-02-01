@@ -12,12 +12,11 @@ import net.bitbylogic.menus.task.TitleUpdateTask;
 import net.bitbylogic.menus.view.internal.NextPageViewRequirement;
 import net.bitbylogic.menus.view.internal.PreviousPageViewRequirement;
 import net.bitbylogic.utils.Pair;
-import net.bitbylogic.utils.Placeholder;
-import net.bitbylogic.utils.PlaceholderProvider;
-import net.bitbylogic.utils.StringModifier;
 import net.bitbylogic.utils.inventory.InventoryUtil;
 import net.bitbylogic.utils.item.ItemStackUtil;
-import net.bitbylogic.utils.message.format.Formatter;
+import net.bitbylogic.utils.message.MessageUtil;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
@@ -129,8 +128,16 @@ public class Menu implements InventoryHolder, Cloneable {
      */
     public Menu addItem(MenuItem item) {
         writeLock.lock();
+
         try {
             item.setMenu(this);
+
+            if (item.getSourceInventories().isEmpty()) {
+                item.getSourceInventories().add(inventories.isEmpty() ? getInventory() : inventories.getFirst().getInventory());
+            }
+
+            data.getFillerItem().ifPresent(fillerItem -> fillerItem.getSlots().removeAll(item.getSlots()));
+
             items.add(item);
             return this;
         } finally {
@@ -344,17 +351,14 @@ public class Menu implements InventoryHolder, Cloneable {
                 }
             }
 
-            List<StringModifier> modifiers = new ArrayList<>();
-            modifiers.addAll(data.getModifiers());
-            modifiers.addAll(data.getPlaceholderProviders().stream().map(PlaceholderProvider::asPlaceholder).toList());
+            List<TagResolver.Single> placeholders = new ArrayList<>();
+            placeholders.addAll(data.getPlaceholders());
 
-            Placeholder pagesPlaceholder = new Placeholder("%pages%", inventories.size() + 1 + "");
-            Placeholder pagePlaceholder = new Placeholder("%page%", inventories.size() + 1 + "");
-            modifiers.add(pagesPlaceholder);
-            modifiers.add(pagePlaceholder);
+            placeholders.add(Placeholder.unparsed("pages", inventories.size() + 1 + ""));
+            placeholders.add(Placeholder.unparsed("page", inventories.size() + 1 + ""));
 
             AtomicReference<List<Integer>> availableSlots = new AtomicReference<>(new ArrayList<>(validSlots));
-            Inventory inventory = Bukkit.createInventory(this, size, Formatter.format(title, modifiers.toArray(new StringModifier[]{})));
+            Inventory inventory = Bukkit.createInventory(this, size, MessageUtil.deserializeToSpigot(title, placeholders.toArray(new TagResolver.Single[]{})));
 
             List<MenuItem> itemCache = new ArrayList<>();
 
@@ -463,11 +467,9 @@ public class Menu implements InventoryHolder, Cloneable {
 
                 ItemStack item = menuItem.getItemUpdateProvider() == null ? menuItem.getItem().clone() : menuItem.getItemUpdateProvider().requestItem(menuItem);
 
-                if (!data.getModifiers().isEmpty() || !data.getPlaceholderProviders().isEmpty()) {
-                    List<StringModifier> placeholders = new ArrayList<>(data.getModifiers());
-                    data.getPlaceholderProviders().forEach(placeholder -> placeholders.add(placeholder.asPlaceholder()));
-
-                    ItemStackUtil.updateItem(item, placeholders.toArray(new StringModifier[]{}));
+                if (!data.getPlaceholders().isEmpty()) {
+                    List<TagResolver.Single> allPlaceholders = new ArrayList<>(data.getPlaceholders());
+                    ItemStackUtil.updateItem(item, allPlaceholders.toArray(new TagResolver.Single[]{}));
                 }
 
                 if(!menuItem.getSourceInventories().isEmpty() && !menuItem.isGlobal()) {

@@ -7,9 +7,9 @@ import net.bitbylogic.menus.data.MenuData;
 import net.bitbylogic.menus.MenuFlag;
 import net.bitbylogic.menus.inventory.MenuInventory;
 import net.bitbylogic.menus.item.MenuItem;
-import net.bitbylogic.utils.StringModifier;
 import net.bitbylogic.utils.inventory.InventoryUtil;
 import net.bitbylogic.utils.item.ItemStackUtil;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -139,14 +139,13 @@ public class MenuUpdateTask {
     private void updateItemMeta(@NonNull Menu menu, @NonNull ItemStack item) {
         final MenuData data = menu.getData();
 
-        if (data.getModifiers().isEmpty() && data.getPlaceholderProviders().isEmpty()) {
+        if (data.getPlaceholders().isEmpty()) {
             return;
         }
 
-        List<StringModifier> placeholders = new ArrayList<>(data.getModifiers());
-        data.getPlaceholderProviders().forEach(placeholder -> placeholders.add(placeholder.asPlaceholder()));
+        List<TagResolver.Single> placeholders = new ArrayList<>(data.getPlaceholders());
 
-        ItemStackUtil.updateItem(item, placeholders.toArray(new StringModifier[]{}));
+        ItemStackUtil.updateItem(item, placeholders.toArray(new TagResolver.Single[]{}));
     }
 
     public boolean isActive() {

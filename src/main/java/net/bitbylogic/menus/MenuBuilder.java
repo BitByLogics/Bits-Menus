@@ -51,7 +51,7 @@ public class MenuBuilder {
             items = new ArrayList<>();
         }
 
-        if(item.getSlots().isEmpty()) {
+        if(item.getSlots().isEmpty() || item.isLocked()) {
             data.getItemStorage().add(item);
             return this;
         }

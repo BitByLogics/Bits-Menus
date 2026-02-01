@@ -79,7 +79,31 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.34</version>
+            <version>1.18.42</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Adventure -->
+        <dependency>
+            <groupId>net.kyori</groupId>
+            <artifactId>adventure-api</artifactId>
+            <version>4.26.1</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Adventure Bukkit -->
+        <dependency>
+            <groupId>net.kyori</groupId>
+            <artifactId>adventure-platform-bukkit</artifactId>
+            <version>4.4.1</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- MiniMessage -->
+        <dependency>
+            <groupId>net.kyori</groupId>
+            <artifactId>adventure-text-minimessage</artifactId>
+            <version>4.26.1</version>
             <scope>provided</scope>
         </dependency>
 
@@ -87,14 +111,14 @@
         <dependency>
             <groupId>com.github.BitByLogics.Bits-Utils</groupId>
             <artifactId>bits-utils-common</artifactId>
-            <version>2.1.0</version>
+            <version>f4b2086f81</version>
         </dependency>
 
         <!-- Bit's Utils Bukkit -->
         <dependency>
             <groupId>com.github.BitByLogics.Bits-Utils</groupId>
             <artifactId>bits-utils-bukkit</artifactId>
-            <version>2.1.0</version>
+            <version>f4b2086f81</version>
         </dependency>
     </dependencies>
 

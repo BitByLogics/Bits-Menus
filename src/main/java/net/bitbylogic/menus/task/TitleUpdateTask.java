@@ -4,10 +4,9 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import net.bitbylogic.menus.Menu;
 import net.bitbylogic.menus.MenuFlag;
-import net.bitbylogic.utils.Placeholder;
-import net.bitbylogic.utils.PlaceholderProvider;
-import net.bitbylogic.utils.StringModifier;
-import net.bitbylogic.utils.message.format.Formatter;
+import net.bitbylogic.utils.message.MessageUtil;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -39,23 +38,20 @@ public class TitleUpdateTask {
     }
 
     private void run() {
-        List<StringModifier> modifiers = new ArrayList<>();
-        modifiers.addAll(menu.getData().getModifiers());
-        modifiers.addAll(menu.getData().getPlaceholderProviders().stream().map(PlaceholderProvider::asPlaceholder).toList());
+        List<TagResolver.Single> modifiers = new ArrayList<>();
+        modifiers.addAll(menu.getData().getPlaceholders());
 
-        Placeholder pagesPlaceholder = new Placeholder("%pages%", menu.getInventories().size() + "");
-        modifiers.add(pagesPlaceholder);
+        modifiers.add(Placeholder.unparsed("pages", menu.getInventories().size() + ""));
 
         menu.getInventories().forEach(menuInventory -> {
             Inventory inventory = menuInventory.getInventory();
 
-            List<StringModifier> finalModifiers = new ArrayList<>(modifiers);
+            List<TagResolver.Single> finalModifiers = new ArrayList<>(modifiers);
 
-            Placeholder pagePlaceholder = new Placeholder("%page%", (menu.getInventories().indexOf(menuInventory) + 1) + "");
-            finalModifiers.add(pagePlaceholder);
+            finalModifiers.add(Placeholder.unparsed("page", (menu.getInventories().indexOf(menuInventory) + 1) + ""));
 
             new ArrayList<>(inventory.getViewers()).forEach(viewer -> {
-                String newTitle = Formatter.format(menuInventory.getTitle(), finalModifiers.toArray(new StringModifier[]{}));
+                String newTitle = MessageUtil.deserializeToSpigot(menuInventory.getTitle(), finalModifiers.toArray(new TagResolver.Single[]{}));
 
                 if (viewer.getOpenInventory().getTopInventory() != inventory || viewer.getOpenInventory().getTitle().equalsIgnoreCase(newTitle)) {
                     return;

@@ -5,8 +5,8 @@ import lombok.NonNull;
 import net.bitbylogic.menus.Menu;
 import net.bitbylogic.menus.action.ClickAction;
 import net.bitbylogic.menus.data.MenuData;
-import net.bitbylogic.utils.Placeholder;
 import net.bitbylogic.utils.item.ItemBuilder;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
@@ -20,7 +20,6 @@ public class GenericConfirmationMenu {
 
     public GenericConfirmationMenu(@NonNull Player player, @NonNull ConfigurationSection menuSection, @NonNull String question, @NonNull Consumer<Void> confirmConsumer,
                                    @NonNull Consumer<Void> cancelConsumer, @NonNull Consumer<Void> closeConsumer) {
-        Placeholder questionPlaceholder = new Placeholder("%question%", question);
 
         Menu menu = Menu.getFromConfig(menuSection)
                 .orElse(new Menu(
@@ -28,7 +27,7 @@ public class GenericConfirmationMenu {
                         "%question%",
                         27,
                         new MenuData()
-                                .withModifier(questionPlaceholder)
+                                .withModifier(Placeholder.unparsed("question", question))
                 ));
 
         ClickAction confirmAction = event -> {

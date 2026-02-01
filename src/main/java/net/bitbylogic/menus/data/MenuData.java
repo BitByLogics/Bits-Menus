@@ -6,8 +6,7 @@ import net.bitbylogic.menus.MenuFlag;
 import net.bitbylogic.menus.action.ClickAction;
 import net.bitbylogic.menus.item.MenuItem;
 import net.bitbylogic.utils.GenericHashMap;
-import net.bitbylogic.utils.PlaceholderProvider;
-import net.bitbylogic.utils.StringModifier;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -31,8 +30,7 @@ public class MenuData implements Cloneable {
     private final @NonNull List<MenuFlag> flags;
     private final @NonNull List<Integer> validSlots;
 
-    private final @NonNull List<PlaceholderProvider> placeholderProviders;
-    private final @NonNull List<StringModifier> modifiers;
+    private final @NonNull List<TagResolver.Single> placeholders;
 
     private final @NonNull GenericHashMap<String, Object> metadata;
 
@@ -41,8 +39,7 @@ public class MenuData implements Cloneable {
         this.flags = new ArrayList<>();
         this.validSlots = new ArrayList<>();
 
-        this.placeholderProviders = new ArrayList<>();
-        this.modifiers = new ArrayList<>();
+        this.placeholders = new ArrayList<>();
 
         this.metadata = new GenericHashMap<>();
     }
@@ -97,23 +94,13 @@ public class MenuData implements Cloneable {
         return this;
     }
 
-    public MenuData withPlaceholderProvider(@NonNull PlaceholderProvider placeholderProvider) {
-        this.placeholderProviders.add(placeholderProvider);
+    public MenuData withModifier(@NonNull TagResolver.Single modifier) {
+        this.placeholders.add(modifier);
         return this;
     }
 
-    public MenuData withPlaceholderProviders(@NonNull List<PlaceholderProvider> placeholderProviders) {
-        this.placeholderProviders.addAll(placeholderProviders);
-        return this;
-    }
-
-    public MenuData withModifier(@NonNull StringModifier modifier) {
-        this.modifiers.add(modifier);
-        return this;
-    }
-
-    public MenuData withModifiers(@NonNull List<StringModifier> modifiers) {
-        this.modifiers.addAll(modifiers);
+    public MenuData withPlaceholders(@NonNull List<TagResolver.Single> modifiers) {
+        this.placeholders.addAll(modifiers);
         return this;
     }
 
@@ -131,8 +118,8 @@ public class MenuData implements Cloneable {
         return flags.contains(flag);
     }
 
-    public void addModifier(@NonNull StringModifier modifier) {
-        modifiers.add(modifier);
+    public void addPlaceholder(@NonNull TagResolver.Single placeholder) {
+        placeholders.add(placeholder);
     }
 
     public Optional<MenuItem> getStoredItem(String id) {
@@ -166,6 +153,6 @@ public class MenuData implements Cloneable {
 
         return new MenuData(closeAction, externalClickAction, clickAction, minInventories,
                 maxInventories, itemStorage, new ArrayList<>(flags), new ArrayList<>(validSlots),
-                new ArrayList<>(placeholderProviders), new ArrayList<>(modifiers), metadata);
+                new ArrayList<>(placeholders), metadata);
     }
 }

@@ -4,7 +4,7 @@ import lombok.NonNull;
 import net.bitbylogic.menus.data.MenuData;
 import net.bitbylogic.menus.item.MenuItem;
 import net.bitbylogic.utils.config.ConfigSerializer;
-import net.bitbylogic.utils.message.format.Formatter;
+import net.bitbylogic.utils.message.MessageUtil;
 import org.bukkit.configuration.ConfigurationSection;
 
 import java.util.ArrayList;
@@ -18,7 +18,7 @@ public class MenuSerializer implements ConfigSerializer<Menu> {
     public Optional<Menu> deserialize(@NonNull ConfigurationSection section) {
         MenuBuilder builder = new MenuBuilder(
                 section.getString("Id", UUID.randomUUID().toString()),
-                Formatter.format(section.getString("Title", "Inventory")),
+                MessageUtil.deserializeToSpigot(section.getString("Title", "Inventory")),
                 section.getInt("Size", 9)
         );
 
