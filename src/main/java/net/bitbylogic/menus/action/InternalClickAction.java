@@ -28,7 +28,8 @@ public enum InternalClickAction {
         for (String message : RichTextUtil.getRichText(args, 0)) {
             MessageUtil.send(event.getWhoClicked(), MessageUtil.deserialize(message, Placeholder.unparsed("player", event.getWhoClicked().getName())));
         }
-    });
+    }),
+    CLOSE_INVENTORY((event, args) -> event.getWhoClicked().closeInventory());
 
     private final Action action;
 

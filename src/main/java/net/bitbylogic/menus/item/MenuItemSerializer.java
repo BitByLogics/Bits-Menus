@@ -26,7 +26,7 @@ public class MenuItemSerializer implements ConfigSerializer<MenuItem> {
             section.getStringList("Actions").forEach(action -> {
                 String[] data = action.split(":");
                 InternalClickAction type = InternalClickAction.parseType(data[0]);
-                internalActions.put(type, data[1]);
+                internalActions.put(type, data.length > 1 ? data[1] : "");
             });
 
             menuItem.withInternalActions(internalActions);
