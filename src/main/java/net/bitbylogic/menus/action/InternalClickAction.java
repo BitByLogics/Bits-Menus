@@ -7,6 +7,7 @@ import net.bitbylogic.utils.RichTextUtil;
 import net.bitbylogic.utils.message.MessageUtil;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 
 @Getter
@@ -15,12 +16,12 @@ public enum InternalClickAction {
 
     RUN_CONSOLE_COMMAND((event, args) -> {
         for (String command : RichTextUtil.getRichText(args, 0)) {
-            MessageUtil.send(Bukkit.getConsoleSender(), MessageUtil.deserialize(command, Placeholder.unparsed("player", event.getWhoClicked().getName())));
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command.replace("%player%", event.getWhoClicked().getName()));
         }
     }),
     RUN_PLAYER_COMMAND((event, args) -> {
         for (String command : RichTextUtil.getRichText(args, 0)) {
-            MessageUtil.send(event.getWhoClicked(), MessageUtil.deserialize(command, Placeholder.unparsed("player", event.getWhoClicked().getName())));
+            ((Player) event.getWhoClicked()).performCommand(command.replace("%player%", event.getWhoClicked().getName()));
         }
     }),
     SEND_MESSAGE((event, args) -> {
