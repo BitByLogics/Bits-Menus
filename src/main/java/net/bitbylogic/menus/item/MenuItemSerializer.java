@@ -56,7 +56,7 @@ public class MenuItemSerializer implements ConfigSerializer<MenuItem> {
             menuItem.withSlot(slot);
         }
 
-        menuItem.setLocked(true);
+        menuItem.setLocked(menuItem.getSlots().isEmpty());
         return Optional.of(menuItem);
     }
 
