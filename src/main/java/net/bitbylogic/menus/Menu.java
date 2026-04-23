@@ -132,10 +132,6 @@ public class Menu implements InventoryHolder, Cloneable {
         try {
             item.setMenu(this);
 
-            if (item.getSourceInventories().isEmpty()) {
-                item.getSourceInventories().add(inventories.isEmpty() ? getInventory() : inventories.getFirst().getInventory());
-            }
-
             data.getFillerItem().ifPresent(fillerItem -> fillerItem.getSlots().removeAll(item.getSlots()));
 
             items.add(item);
