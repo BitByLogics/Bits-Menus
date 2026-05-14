@@ -6,6 +6,7 @@ import net.bitbylogic.menus.Menu;
 import net.bitbylogic.menus.action.ClickAction;
 import net.bitbylogic.menus.data.MenuData;
 import net.bitbylogic.utils.item.ItemBuilder;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
@@ -24,7 +25,7 @@ public class GenericConfirmationMenu {
         Menu menu = Menu.getFromConfig(menuSection)
                 .orElse(new Menu(
                         "Confirmation-Menu",
-                        "%question%",
+                        Component.text(question),
                         27,
                         new MenuData()
                                 .withModifier(Placeholder.unparsed("question", question))

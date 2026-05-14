@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NonNull;
 import net.bitbylogic.menus.data.MenuData;
 import net.bitbylogic.menus.item.MenuItem;
+import net.kyori.adventure.text.Component;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,7 +15,7 @@ public class MenuBuilder {
 
     private final String id;
 
-    private String title = "Inventory";
+    private Component title = Component.text("Inventory");
     private int size = 9;
 
     private List<MenuItem> items = new ArrayList<>();
@@ -26,17 +27,17 @@ public class MenuBuilder {
         this.id = id;
     }
 
-    public MenuBuilder(@NonNull String id, @NonNull String title, @NonNull MenuRows menuRows) {
+    public MenuBuilder(@NonNull String id, @NonNull Component title, @NonNull MenuRows menuRows) {
         this(id, title, menuRows.getSize());
     }
 
-    public MenuBuilder(@NonNull String id, @NonNull String title, int size) {
+    public MenuBuilder(@NonNull String id, @NonNull Component title, int size) {
         this.id = id;
         this.title = title;
         this.size = size;
     }
 
-    public MenuBuilder title(String title) {
+    public MenuBuilder title(Component title) {
         this.title = title;
         return this;
     }
@@ -51,7 +52,7 @@ public class MenuBuilder {
             items = new ArrayList<>();
         }
 
-        if(item.getSlots().isEmpty() || item.isLocked()) {
+        if(item.getSlots().isEmpty()) {
             data.getItemStorage().add(item);
             return this;
         }

@@ -18,7 +18,7 @@ public class MenuSerializer implements ConfigSerializer<Menu> {
     public Optional<Menu> deserialize(@NonNull ConfigurationSection section) {
         MenuBuilder builder = new MenuBuilder(
                 section.getString("Id", UUID.randomUUID().toString()),
-                MessageUtil.deserializeToSpigot(section.getString("Title", "Inventory")),
+                MessageUtil.deserialize(section.getString("Title", "Inventory")),
                 section.getInt("Size", 9)
         );
 

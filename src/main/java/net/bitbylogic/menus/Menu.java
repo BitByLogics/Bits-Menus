@@ -15,6 +15,7 @@ import net.bitbylogic.utils.Pair;
 import net.bitbylogic.utils.inventory.InventoryUtil;
 import net.bitbylogic.utils.item.ItemStackUtil;
 import net.bitbylogic.utils.message.MessageUtil;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
@@ -46,7 +47,7 @@ public class Menu implements InventoryHolder, Cloneable {
     private static final String MENU_CONFIG_PATH = "menus/%s.yml";
 
     private final String id;
-    private final String title;
+    private final Component title;
     private final int size;
 
     private final MenuData data;
@@ -65,15 +66,15 @@ public class Menu implements InventoryHolder, Cloneable {
     private final Lock readLock = lock.readLock();
     private final Lock writeLock = lock.writeLock();
 
-    public Menu(@NonNull String id, @NonNull String title, @NonNull MenuRows menuRows) {
+    public Menu(@NonNull String id, @NonNull Component title, @NonNull MenuRows menuRows) {
         this(id, title, menuRows.getSize());
     }
 
-    public Menu(@NonNull String id, @NonNull String title, int size) {
+    public Menu(@NonNull String id, @NonNull Component title, int size) {
         this(id, title, size, null);
     }
 
-    public Menu(@NonNull String id, @NonNull String title, int size, @Nullable MenuData data) {
+    public Menu(@NonNull String id, @NonNull Component title, int size, @Nullable MenuData data) {
         this.id = id;
         this.title = title;
         this.size = size;
@@ -87,7 +88,7 @@ public class Menu implements InventoryHolder, Cloneable {
         updateTask = new MenuUpdateTask(this);
     }
 
-    public Menu(@NonNull String id, @NonNull String title, int size, @Nullable MenuData data,
+    public Menu(@NonNull String id, @NonNull Component title, int size, @Nullable MenuData data,
                 @Nullable List<MenuItem> items, @Nullable List<MenuInventory> inventories) {
         this.id = id;
         this.title = title;
@@ -354,7 +355,7 @@ public class Menu implements InventoryHolder, Cloneable {
             placeholders.add(Placeholder.unparsed("page", inventories.size() + 1 + ""));
 
             AtomicReference<List<Integer>> availableSlots = new AtomicReference<>(new ArrayList<>(validSlots));
-            Inventory inventory = Bukkit.createInventory(this, size, MessageUtil.deserializeToSpigot(title, placeholders.toArray(new TagResolver.Single[]{})));
+            Inventory inventory = Bukkit.createInventory(this, size, title);
 
             List<MenuItem> itemCache = new ArrayList<>();
 

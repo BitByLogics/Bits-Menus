@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import net.bitbylogic.menus.Menu;
+import net.kyori.adventure.text.Component;
 import org.bukkit.inventory.Inventory;
 
 @Getter @Setter
@@ -11,7 +12,7 @@ import org.bukkit.inventory.Inventory;
 public class MenuInventory {
 
     private final Inventory inventory;
-    private String title;
+    private Component title;
 
     public Menu getMenu() {
         return (Menu) inventory.getHolder();

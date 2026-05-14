@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NonNull;
 import net.bitbylogic.utils.RichTextUtil;
 import net.bitbylogic.utils.message.MessageUtil;
+import net.bitbylogic.utils.sound.SoundData;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -28,6 +29,10 @@ public enum InternalClickAction {
         for (String message : RichTextUtil.getRichText(args, 0)) {
             MessageUtil.send(event.getWhoClicked(), MessageUtil.deserialize(message, Placeholder.unparsed("player", event.getWhoClicked().getName())));
         }
+    }),
+    PLAY_SOUND((event, args) -> {
+        SoundData soundData = SoundData.fromString(args);
+        soundData.play((Player) event.getWhoClicked());
     }),
     CLOSE_INVENTORY((event, args) -> event.getWhoClicked().closeInventory());
 

@@ -141,9 +141,9 @@ public class MenuListener implements Listener {
 
         menu.getViewers().add(event.getPlayer().getUniqueId());
 
-        if (menu.getTitleUpdateTask() != null && !menu.getTitleUpdateTask().isActive()) {
-            menu.getTitleUpdateTask().start(plugin);
-        }
+//        if (menu.getTitleUpdateTask() != null && !menu.getTitleUpdateTask().isActive()) {
+//            menu.getTitleUpdateTask().start(plugin);
+//        }
 
         if (menu.getUpdateTask() == null || menu.getUpdateTask().isActive()) {
             return;

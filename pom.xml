@@ -45,10 +45,10 @@
     </build>
 
     <repositories>
-        <!-- Spigot -->
+        <!-- Paper -->
         <repository>
-            <id>spigotmc-repo</id>
-            <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
+            <id>papermc</id>
+            <url>https://repo.papermc.io/repository/maven-public/</url>
         </repository>
 
         <!-- JitPack -->
@@ -59,11 +59,11 @@
     </repositories>
 
     <dependencies>
-        <!-- Spigot -->
+        <!-- Paper -->
         <dependency>
-            <groupId>org.spigotmc</groupId>
-            <artifactId>spigot-api</artifactId>
-            <version>1.21.1-R0.1-SNAPSHOT</version>
+            <groupId>io.papermc.paper</groupId>
+            <artifactId>paper-api</artifactId>
+            <version>1.21.11-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
 
@@ -83,42 +83,18 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- Adventure -->
-        <dependency>
-            <groupId>net.kyori</groupId>
-            <artifactId>adventure-api</artifactId>
-            <version>4.26.1</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <!-- Adventure Bukkit -->
-        <dependency>
-            <groupId>net.kyori</groupId>
-            <artifactId>adventure-platform-bukkit</artifactId>
-            <version>4.4.1</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <!-- MiniMessage -->
-        <dependency>
-            <groupId>net.kyori</groupId>
-            <artifactId>adventure-text-minimessage</artifactId>
-            <version>4.26.1</version>
-            <scope>provided</scope>
-        </dependency>
-
         <!-- Bit's Utils Common -->
         <dependency>
             <groupId>com.github.BitByLogics.Bits-Utils</groupId>
             <artifactId>bits-utils-common</artifactId>
-            <version>fcef2de763</version>
+            <version>06c6f0068d</version>
         </dependency>
 
         <!-- Bit's Utils Bukkit -->
         <dependency>
             <groupId>com.github.BitByLogics.Bits-Utils</groupId>
             <artifactId>bits-utils-bukkit</artifactId>
-            <version>fcef2de763</version>
+            <version>06c6f0068d</version>
         </dependency>
     </dependencies>
 

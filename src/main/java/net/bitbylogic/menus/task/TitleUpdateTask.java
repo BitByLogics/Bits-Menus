@@ -43,23 +43,23 @@ public class TitleUpdateTask {
 
         modifiers.add(Placeholder.unparsed("pages", menu.getInventories().size() + ""));
 
-        menu.getInventories().forEach(menuInventory -> {
-            Inventory inventory = menuInventory.getInventory();
-
-            List<TagResolver.Single> finalModifiers = new ArrayList<>(modifiers);
-
-            finalModifiers.add(Placeholder.unparsed("page", (menu.getInventories().indexOf(menuInventory) + 1) + ""));
-
-            new ArrayList<>(inventory.getViewers()).forEach(viewer -> {
-                String newTitle = MessageUtil.deserializeToSpigot(menuInventory.getTitle(), finalModifiers.toArray(new TagResolver.Single[]{}));
-
-                if (viewer.getOpenInventory().getTopInventory() != inventory || viewer.getOpenInventory().getTitle().equalsIgnoreCase(newTitle)) {
-                    return;
-                }
-
-                viewer.getOpenInventory().setTitle(newTitle);
-            });
-        });
+//        menu.getInventories().forEach(menuInventory -> {
+//            Inventory inventory = menuInventory.getInventory();
+//
+//            List<TagResolver.Single> finalModifiers = new ArrayList<>(modifiers);
+//
+//            finalModifiers.add(Placeholder.unparsed("page", (menu.getInventories().indexOf(menuInventory) + 1) + ""));
+//
+//            new ArrayList<>(inventory.getViewers()).forEach(viewer -> {
+//                String newTitle = MessageUtil.deserialize(menuInventory.getTitle(), finalModifiers.toArray(new TagResolver.Single[]{}));
+//
+//                if (viewer.getOpenInventory().getTopInventory() != inventory || viewer.getOpenInventory().getTitle().equalsIgnoreCase(newTitle)) {
+//                    return;
+//                }
+//
+//                viewer.getOpenInventory().setTitle(newTitle);
+//            });
+//        });
     }
 
     public boolean isActive() {

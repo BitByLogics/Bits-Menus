@@ -24,7 +24,7 @@ public class MenuItemSerializer implements ConfigSerializer<MenuItem> {
         if (!section.getStringList("Actions").isEmpty()) {
             HashMap<InternalClickAction, String> internalActions = new HashMap<>();
             section.getStringList("Actions").forEach(action -> {
-                String[] data = action.split(":");
+                String[] data = action.split(":", 2);
                 InternalClickAction type = InternalClickAction.parseType(data[0]);
                 internalActions.put(type, data.length > 1 ? data[1] : "");
             });
@@ -56,7 +56,7 @@ public class MenuItemSerializer implements ConfigSerializer<MenuItem> {
             menuItem.withSlot(slot);
         }
 
-        menuItem.setLocked(menuItem.getSlots().isEmpty());
+        menuItem.setLocked(!menuItem.getSlots().isEmpty());
         return Optional.of(menuItem);
     }
 
