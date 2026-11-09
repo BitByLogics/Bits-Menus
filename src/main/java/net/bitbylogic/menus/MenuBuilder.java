@@ -1,11 +1,11 @@
 package net.bitbylogic.menus;
 
-import com.google.common.base.Preconditions;
 import lombok.Getter;
 import lombok.NonNull;
 import net.bitbylogic.menus.data.MenuData;
 import net.bitbylogic.menus.item.MenuItem;
 import net.kyori.adventure.text.Component;
+import org.bukkit.Bukkit;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +18,7 @@ public class MenuBuilder {
     private Component title = Component.text("Inventory");
     private int size = 9;
 
-    private List<MenuItem> items = new ArrayList<>();
+    private final List<MenuItem> items = new ArrayList<>();
     private MenuData data = new MenuData();
 
     private Menu menu;
@@ -48,10 +48,6 @@ public class MenuBuilder {
     }
 
     public MenuBuilder withItem(@NonNull MenuItem item) {
-        if (items == null) {
-            items = new ArrayList<>();
-        }
-
         if(item.getSlots().isEmpty()) {
             data.getItemStorage().add(item);
             return this;
@@ -68,7 +64,7 @@ public class MenuBuilder {
                 continue;
             }
 
-            items.add(item);
+            this.items.add(item);
         }
         return this;
     }
@@ -79,11 +75,15 @@ public class MenuBuilder {
     }
 
     public Menu build() {
-        Preconditions.checkNotNull(title, "Invalid title");
-        Preconditions.checkState(size % 9 == 0, "Size must be multiple of 9");
+        if (size < 9 || size > 54 || size % 9 != 0) {
+            int clampedSize = Math.max(9, Math.min(54, (size / 9) * 9));
+
+            Bukkit.getLogger().warning("Invalid size " + size + " for menu '" + id + "', using " + clampedSize + " instead.");
+            size = clampedSize;
+        }
 
         menu = new Menu(id, title, size, data);
-        items.forEach(menuItem -> menu.addItem(menuItem));
+        items.forEach(menu::addItem);
 
         return menu;
     }

@@ -10,9 +10,7 @@ public enum MenuFlag {
      * Allows the player to remove items from the inventory
      */
     ALLOW_REMOVAL,
-    /**
-     * Prevent the menus inventories from having their titles updated
-     */
+    @Deprecated(forRemoval = true)
     DISABLE_TITLE_UPDATE,
     DISABLE_UPDATES,
     /**

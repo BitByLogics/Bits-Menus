@@ -3,6 +3,7 @@ package net.bitbylogic.menus.action;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NonNull;
+import net.bitbylogic.menus.task.MenuScheduler;
 import net.bitbylogic.utils.RichTextUtil;
 import net.bitbylogic.utils.message.MessageUtil;
 import net.bitbylogic.utils.sound.SoundData;
@@ -10,6 +11,7 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.plugin.java.JavaPlugin;
 
 @Getter
 @AllArgsConstructor
@@ -17,7 +19,7 @@ public enum InternalClickAction {
 
     RUN_CONSOLE_COMMAND((event, args) -> {
         for (String command : RichTextUtil.getRichText(args, 0)) {
-            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command.replace("%player%", event.getWhoClicked().getName()));
+            dispatchConsoleCommand(command.replace("%player%", event.getWhoClicked().getName()));
         }
     }),
     RUN_PLAYER_COMMAND((event, args) -> {
@@ -37,6 +39,12 @@ public enum InternalClickAction {
     CLOSE_INVENTORY((event, args) -> event.getWhoClicked().closeInventory());
 
     private final Action action;
+
+    private static void dispatchConsoleCommand(String command) {
+        JavaPlugin plugin = JavaPlugin.getProvidingPlugin(InternalClickAction.class);
+
+        MenuScheduler.get(plugin).runNextTick(task -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command));
+    }
 
     public static InternalClickAction parseType(String name) {
         for (InternalClickAction type : values()) {

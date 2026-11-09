@@ -4,11 +4,11 @@ import lombok.NonNull;
 import net.bitbylogic.menus.action.InternalClickAction;
 import net.bitbylogic.utils.config.ConfigSerializer;
 import net.bitbylogic.utils.item.ItemStackUtil;
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,17 +19,23 @@ public class MenuItemSerializer implements ConfigSerializer<MenuItem> {
         String id = section.getName();
         ItemStack item = ItemStackUtil.getFromConfig(section);
         MenuItem menuItem = new MenuItem(id).item(item).updatable(section.getBoolean("Update", false));
-        menuItem.setLocked(false);
 
-        if (!section.getStringList("Actions").isEmpty()) {
-            HashMap<InternalClickAction, String> internalActions = new HashMap<>();
-            section.getStringList("Actions").forEach(action -> {
-                String[] data = action.split(":", 2);
-                InternalClickAction type = InternalClickAction.parseType(data[0]);
-                internalActions.put(type, data.length > 1 ? data[1] : "");
-            });
+        for (String action : section.getStringList("Actions")) {
+            String[] data = action.split(":", 2);
+            InternalClickAction type = InternalClickAction.parseType(data[0]);
 
-            menuItem.withInternalActions(internalActions);
+            if (type == null) {
+                Bukkit.getLogger().warning("Unknown action '" + data[0] + "' on menu item '" + id + "', skipping it.");
+                continue;
+            }
+
+            String actionData = "";
+
+            if (data.length > 1) {
+                actionData = data[1];
+            }
+
+            menuItem.withInternalAction(type, actionData);
         }
 
         ConfigurationSection metaDataSection = section.getConfigurationSection("Metadata");
@@ -44,9 +50,10 @@ public class MenuItemSerializer implements ConfigSerializer<MenuItem> {
             menuItem.filler(true);
         }
 
-        if (!section.getIntegerList("Slots").isEmpty()) {
-            menuItem.withSlots(section.getIntegerList("Slots"));
-            menuItem.setLocked(true);
+        List<Integer> slots = section.getIntegerList("Slots");
+
+        if (!slots.isEmpty()) {
+            menuItem.withSlots(slots);
             return Optional.of(menuItem);
         }
 
@@ -56,46 +63,37 @@ public class MenuItemSerializer implements ConfigSerializer<MenuItem> {
             menuItem.withSlot(slot);
         }
 
-        menuItem.setLocked(!menuItem.getSlots().isEmpty());
         return Optional.of(menuItem);
     }
 
     @Override
     public ConfigurationSection serialize(@NonNull ConfigurationSection section, @NonNull MenuItem menuItem) {
-        if(menuItem.isUpdatable()) {
+        if (menuItem.isUpdatable()) {
             section.set("Update", true);
         }
 
         List<String> actions = new ArrayList<>();
-        menuItem.getInternalActions().forEach((internalClickAction, s) -> {
-            actions.add(internalClickAction.name() + ":" + s);
-        });
+        menuItem.getInternalActions().forEach((internalClickAction, data) -> actions.add(internalClickAction.name() + ":" + data));
 
-        if(!actions.isEmpty()) {
+        if (!actions.isEmpty()) {
             section.set("Actions", actions);
         }
 
-        menuItem.getMetadata().forEach((s, object) -> {
-            section.set("Metadata." + s, object);
-        });
+        menuItem.getMetadata().forEach((key, value) -> section.set("Metadata." + key, value));
 
-        if(menuItem.isFiller()) {
+        if (menuItem.isFiller()) {
             section.set("Filler", true);
         }
 
-        if(menuItem.getItem() != null) {
+        if (menuItem.getItem() != null) {
             ItemStackUtil.saveToConfig(section, menuItem.getItem());
         }
 
-        if(menuItem.getSlots().isEmpty()) {
+        if (menuItem.getSlots().isEmpty()) {
             return section;
         }
 
-        if(!menuItem.isSaveSlots()) {
-            return section;
-        }
-
-        if(menuItem.getSlots().size() == 1) {
+        if (menuItem.getSlots().size() == 1) {
             section.set("Slot", menuItem.getSlots().getFirst());
             return section;
         }

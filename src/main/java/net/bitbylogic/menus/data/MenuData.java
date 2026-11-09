@@ -9,9 +9,9 @@ import net.bitbylogic.utils.GenericHashMap;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 @Getter
 @Setter
@@ -35,11 +35,11 @@ public class MenuData implements Cloneable {
     private final @NonNull GenericHashMap<String, Object> metadata;
 
     public MenuData() {
-        this.itemStorage = new ArrayList<>();
-        this.flags = new ArrayList<>();
-        this.validSlots = new ArrayList<>();
+        this.itemStorage = new CopyOnWriteArrayList<>();
+        this.flags = new CopyOnWriteArrayList<>();
+        this.validSlots = new CopyOnWriteArrayList<>();
 
-        this.placeholders = new ArrayList<>();
+        this.placeholders = new CopyOnWriteArrayList<>();
 
         this.metadata = new GenericHashMap<>();
     }
@@ -145,14 +145,14 @@ public class MenuData implements Cloneable {
 
     @Override
     public MenuData clone() {
-        List<MenuItem> itemStorage = new ArrayList<>();
+        List<MenuItem> itemStorage = new CopyOnWriteArrayList<>();
         this.itemStorage.forEach(item -> itemStorage.add(item.clone()));
 
         GenericHashMap<String, Object> metadata = new GenericHashMap<>();
         metadata.putAll(this.metadata);
 
         return new MenuData(closeAction, externalClickAction, clickAction, minInventories,
-                maxInventories, itemStorage, new ArrayList<>(flags), new ArrayList<>(validSlots),
-                new ArrayList<>(placeholders), metadata);
+                maxInventories, itemStorage, new CopyOnWriteArrayList<>(flags), new CopyOnWriteArrayList<>(validSlots),
+                new CopyOnWriteArrayList<>(placeholders), metadata);
     }
 }

@@ -86,7 +86,7 @@ public class GenericConfirmationMenu {
         
         menu.saveToConfig(menuSection);
 
-        player.openInventory(menu.getInventory());
+        menu.createSession().open(player);
     }
 
 }

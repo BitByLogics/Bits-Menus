@@ -1,43 +1,51 @@
 package net.bitbylogic.menus.listener;
 
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import net.bitbylogic.menus.Menu;
 import net.bitbylogic.menus.MenuFlag;
+import net.bitbylogic.menus.MenuSession;
+import net.bitbylogic.menus.data.MenuData;
+import net.bitbylogic.menus.inventory.MenuInventory;
 import net.bitbylogic.menus.item.MenuItem;
+import net.bitbylogic.menus.task.MenuScheduler;
 import net.bitbylogic.utils.cooldown.CooldownUtil;
 import net.bitbylogic.utils.inventory.InventoryUtil;
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.inventory.*;
+import org.bukkit.event.inventory.ClickType;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.event.inventory.InventoryMoveItemEvent;
+import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @RequiredArgsConstructor
 public class MenuListener implements Listener {
 
+    private static final int EXTERNAL_CLICK_COOLDOWN = 200;
+
     private final JavaPlugin plugin;
-    private final TimeUnit clickCooldownUnit = TimeUnit.MILLISECONDS;
 
     @EventHandler
     public void onMenuClick(InventoryClickEvent event) {
         Inventory topInventory = InventoryUtil.getViewInventory(event, "getTopInventory");
         Inventory bottomInventory = InventoryUtil.getViewInventory(event, "getBottomInventory");
 
-        if (!(event.getWhoClicked() instanceof Player)) {
+        if (!(event.getWhoClicked() instanceof Player player)) {
             return;
         }
 
-        if (!(topInventory.getHolder() instanceof Menu menu)) {
+        if (!(topInventory.getHolder() instanceof MenuSession session)) {
             return;
         }
+
+        MenuData data = session.getMenu().getData();
 
         if (event.getClick() == ClickType.NUMBER_KEY && event.getClickedInventory() == topInventory) {
             event.setCancelled(true);
@@ -45,24 +53,12 @@ public class MenuListener implements Listener {
         }
 
         if (event.isShiftClick() && event.getClickedInventory() != topInventory) {
-            event.setCancelled(!menu.getData().hasFlag(MenuFlag.ALLOW_INPUT));
+            event.setCancelled(!data.hasFlag(MenuFlag.ALLOW_INPUT));
             return;
         }
 
         if (event.getClickedInventory() == bottomInventory) {
-            if (menu.getData().getExternalClickAction() != null) {
-                if(CooldownUtil.hasCooldown(menu.getId() + "exc-" + event.getSlot(), event.getWhoClicked().getUniqueId())) {
-                    event.setCancelled(!menu.getData().hasFlag(MenuFlag.LOWER_INTERACTION));
-                    return;
-                }
-
-                int clickCooldownTime = 200;
-                CooldownUtil.startCooldown(plugin, menu.getId() + "exc-" + event.getSlot(), event.getWhoClicked().getUniqueId(), clickCooldownTime, clickCooldownUnit);
-
-                menu.getData().getExternalClickAction().onClick(event);
-            }
-
-            event.setCancelled(!menu.getData().hasFlag(MenuFlag.LOWER_INTERACTION));
+            handleExternalClick(event, session);
             return;
         }
 
@@ -70,49 +66,46 @@ public class MenuListener implements Listener {
             return;
         }
 
-        if(menu.getData().getClickAction() != null) {
-            menu.getData().getClickAction().onClick(event);
+        if (data.getClickAction() != null) {
+            data.getClickAction().onClick(event);
         }
 
-        if (menu.getItem(topInventory, event.getSlot()).isEmpty() && (event.getCursor() == null || event.getCursor().getType() == Material.AIR) && menu.getData().hasFlag(MenuFlag.ALLOW_REMOVAL)) {
+        List<MenuItem> clickedItems = session.getItems(topInventory, event.getSlot());
+        boolean cursorEmpty = event.getCursor().getType() == Material.AIR;
+
+        if (clickedItems.isEmpty() && cursorEmpty && data.hasFlag(MenuFlag.ALLOW_REMOVAL)) {
             return;
         }
 
-        event.setCancelled(menu.getItem(topInventory, event.getSlot()).isPresent() || !menu.getData().hasFlag(MenuFlag.ALLOW_INPUT));
+        event.setCancelled(!clickedItems.isEmpty() || !data.hasFlag(MenuFlag.ALLOW_INPUT));
 
-        List<MenuItem> clickedItemsCopy = new ArrayList<>(menu.getItems(topInventory, event.getSlot()));
+        MenuInventory page = session.getPage(topInventory).orElse(null);
 
-        clickedItemsCopy.forEach(menuItem -> {
-            if (menuItem.getViewRequirements().stream().anyMatch(requirement -> !requirement.canView(topInventory, menuItem, menu))) {
-                return;
+        if (page == null) {
+            return;
+        }
+
+        for (MenuItem menuItem : clickedItems) {
+            if (!session.isVisible(page, menuItem)) {
+                continue;
             }
 
-            if (menuItem.getClickRequirements().stream().anyMatch(requirement -> !requirement.canClick((Player) event.getWhoClicked()))) {
-                return;
+            if (menuItem.getClickRequirements().stream().anyMatch(requirement -> !requirement.canClick(player))) {
+                continue;
             }
 
             menuItem.onClick(event, plugin);
-
-            List<Inventory> sourceInventoriesCopy = new ArrayList<>(menuItem.getSourceInventories());
-
-            sourceInventoriesCopy.forEach(inventory -> {
-                List<Integer> slotsCopy = new ArrayList<>(menuItem.getSlots());
-                slotsCopy.forEach(slot ->
-                        inventory.setItem(slot, menuItem.getItemUpdateProvider() == null ? menuItem.getItem().clone() : menuItem.getItemUpdateProvider().requestItem(menuItem))
-                );
-            });
-        });
+            session.refreshItem(menuItem);
+        }
     }
 
     @EventHandler
     public void onTransfer(InventoryMoveItemEvent event) {
-        Inventory inventory = event.getDestination();
-
-        if (!(inventory.getHolder() instanceof Menu menu)) {
+        if (!(event.getDestination().getHolder() instanceof MenuSession session)) {
             return;
         }
 
-        event.setCancelled(!menu.getData().hasFlag(MenuFlag.ALLOW_INPUT));
+        event.setCancelled(!session.getMenu().getData().hasFlag(MenuFlag.ALLOW_INPUT));
     }
 
     @EventHandler
@@ -120,62 +113,77 @@ public class MenuListener implements Listener {
         Inventory inventory = event.getInventory();
         Inventory bottomInventory = InventoryUtil.getViewInventory(event, "getBottomInventory");
 
-        if (!(inventory.getHolder() instanceof Menu menu)) {
+        if (!(inventory.getHolder() instanceof MenuSession session)) {
             return;
         }
 
-        if (inventory == bottomInventory && menu.getData().hasFlag(MenuFlag.LOWER_INTERACTION)) {
+        MenuData data = session.getMenu().getData();
+
+        if (inventory == bottomInventory && data.hasFlag(MenuFlag.LOWER_INTERACTION)) {
             return;
         }
 
-        event.setCancelled(!menu.getData().hasFlag(MenuFlag.ALLOW_INPUT));
+        event.setCancelled(!data.hasFlag(MenuFlag.ALLOW_INPUT));
     }
 
     @EventHandler
     public void onOpen(InventoryOpenEvent event) {
-        Inventory inventory = event.getInventory();
-
-        if (!(inventory.getHolder() instanceof Menu menu)) {
+        if (!(event.getInventory().getHolder() instanceof MenuSession session)) {
             return;
         }
 
-        menu.getViewers().add(event.getPlayer().getUniqueId());
-
-//        if (menu.getTitleUpdateTask() != null && !menu.getTitleUpdateTask().isActive()) {
-//            menu.getTitleUpdateTask().start(plugin);
-//        }
-
-        if (menu.getUpdateTask() == null || menu.getUpdateTask().isActive()) {
-            return;
-        }
-
-        menu.getUpdateTask().startTask(plugin);
+        session.addViewer(event.getPlayer().getUniqueId());
+        session.getUpdateTask().startTask(plugin);
     }
 
     @EventHandler
     public void onClose(InventoryCloseEvent event) {
-        Inventory inventory = event.getInventory();
-
-        if (!(inventory.getHolder() instanceof Menu menu)) {
+        if (!(event.getInventory().getHolder() instanceof MenuSession session)) {
             return;
         }
 
-        menu.getViewers().remove(event.getPlayer().getUniqueId());
+        session.removeViewer(event.getPlayer().getUniqueId());
 
-        if (event.getViewers().stream().filter(p -> !p.getUniqueId().equals(event.getPlayer().getUniqueId())).count() == 0) {
-            menu.getUpdateTask().cancelTask();
+        boolean otherViewers = event.getViewers().stream().anyMatch(viewer -> !viewer.getUniqueId().equals(event.getPlayer().getUniqueId()));
 
-            if (menu.getTitleUpdateTask() != null) {
-                menu.getTitleUpdateTask().cancel();
+        if (!otherViewers) {
+            session.getUpdateTask().cancelTask();
+        }
+
+        if (session.getMenu().getData().getCloseAction() == null) {
+            return;
+        }
+
+        Player player = (Player) event.getPlayer();
+
+        MenuScheduler.get(plugin).runAtEntityLater(player, () -> {
+            if (player.isOnline()) {
+                player.updateInventory();
             }
-        }
+        }, 1);
+        MenuScheduler.get(plugin).runAtEntityLater(player, () -> session.getMenu().getData().getCloseAction().onClose(event), 2);
+    }
 
-        if (menu.getData().getCloseAction() == null) {
+    private void handleExternalClick(InventoryClickEvent event, MenuSession session) {
+        MenuData data = session.getMenu().getData();
+        boolean lowerInteraction = data.hasFlag(MenuFlag.LOWER_INTERACTION);
+
+        if (data.getExternalClickAction() == null) {
+            event.setCancelled(!lowerInteraction);
             return;
         }
 
-        Bukkit.getScheduler().runTaskLater(plugin, () -> ((Player) event.getPlayer()).updateInventory(), 1);
-        Bukkit.getScheduler().runTaskLater(plugin, () -> menu.getData().getCloseAction().onClose(event), 2);
+        String cooldownKey = session.getMenu().getId() + "exc-" + event.getSlot();
+
+        if (CooldownUtil.hasCooldown(cooldownKey, event.getWhoClicked().getUniqueId())) {
+            event.setCancelled(!lowerInteraction);
+            return;
+        }
+
+        CooldownUtil.startCooldown(plugin, cooldownKey, event.getWhoClicked().getUniqueId(), EXTERNAL_CLICK_COOLDOWN, TimeUnit.MILLISECONDS);
+
+        data.getExternalClickAction().onClick(event);
+        event.setCancelled(!lowerInteraction);
     }
 
 }

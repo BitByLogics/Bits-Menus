@@ -2,27 +2,29 @@ package net.bitbylogic.menus.item;
 
 import lombok.Getter;
 import lombok.NonNull;
-import lombok.Setter;
-import net.bitbylogic.menus.Menu;
 import net.bitbylogic.menus.action.ClickAction;
 import net.bitbylogic.menus.action.InternalClickAction;
+import net.bitbylogic.menus.action.NextPageAction;
+import net.bitbylogic.menus.action.PreviousPageAction;
 import net.bitbylogic.menus.requirement.ClickRequirement;
 import net.bitbylogic.menus.view.MenuViewRequirement;
+import net.bitbylogic.menus.view.internal.NextPageViewRequirement;
+import net.bitbylogic.menus.view.internal.PreviousPageViewRequirement;
 import net.bitbylogic.utils.GenericHashMap;
 import net.bitbylogic.utils.cooldown.CooldownUtil;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 
 @Getter
@@ -32,33 +34,21 @@ public class MenuItem implements Cloneable {
 
     private final @NotNull String id;
 
-    private final @NonNull List<Integer> slots;
-    private final @NotNull List<Inventory> sourceInventories;
+    private final @NotNull List<Integer> slots = new CopyOnWriteArrayList<>();
 
-    private final @NotNull List<ClickAction> actions;
-    private final @NotNull HashMap<InternalClickAction, String> internalActions;
+    private final @NotNull List<ClickAction> actions = new CopyOnWriteArrayList<>();
+    private final @NotNull Map<InternalClickAction, String> internalActions = new ConcurrentHashMap<>();
 
-    private final @NotNull List<ClickRequirement> clickRequirements;
-    private final @NotNull List<MenuViewRequirement> viewRequirements;
+    private final @NotNull List<ClickRequirement> clickRequirements = new CopyOnWriteArrayList<>();
+    private final @NotNull List<MenuViewRequirement> viewRequirements = new CopyOnWriteArrayList<>();
 
-    private final @NonNull GenericHashMap<String, Object> metadata;
+    private final @NotNull GenericHashMap<String, Object> metadata = new GenericHashMap<>();
 
     private @Nullable ItemStack item;
     private @Nullable MenuItemUpdateProvider itemUpdateProvider;
 
-    @Setter
-    private @Nullable Menu menu;
-
     private boolean filler;
     private boolean updatable;
-
-    @Setter
-    private boolean locked;
-
-    @Setter
-    private boolean global = true;
-
-    private boolean saveSlots = true;
     private boolean saved = true;
 
     private int clickCooldownTime = 200;
@@ -66,65 +56,15 @@ public class MenuItem implements Cloneable {
 
     public MenuItem(@NonNull String id) {
         this.id = id;
-
-        this.slots = new ArrayList<>();
-        this.sourceInventories = new ArrayList<>();
-
-        this.actions = new ArrayList<>();
-        this.internalActions = new HashMap<>();
-
-        this.clickRequirements = new ArrayList<>();
-        this.viewRequirements = new ArrayList<>();
-
-        this.metadata = new GenericHashMap<>();
-    }
-
-    public MenuItem(@NotNull String id, @NonNull List<Integer> slots, @NotNull List<Inventory> sourceInventories,
-                    @NotNull List<ClickAction> actions, @NotNull HashMap<InternalClickAction, String> internalActions,
-                    @NotNull List<ClickRequirement> clickRequirements, @NotNull List<MenuViewRequirement> viewRequirements,
-                    @NonNull GenericHashMap<String, Object> metadata, @Nullable ItemStack item,
-                    @Nullable MenuItemUpdateProvider itemUpdateProvider, boolean filler, boolean updatable, boolean saved) {
-        this.id = id;
-        this.slots = slots;
-        this.sourceInventories = sourceInventories;
-        this.actions = actions;
-        this.internalActions = internalActions;
-        this.clickRequirements = clickRequirements;
-        this.viewRequirements = viewRequirements;
-        this.metadata = metadata;
-        this.item = item;
-        this.itemUpdateProvider = itemUpdateProvider;
-        this.filler = filler;
-        this.updatable = updatable;
-        this.saved = saved;
-        this.locked = false;
     }
 
     public MenuItem withSlot(int slot) {
-        if(locked) {
-            return this;
-        }
-
-        this.slots.add(slot);
+        slots.add(slot);
         return this;
     }
 
     public MenuItem withSlots(@NonNull List<Integer> slots) {
-        if(locked) {
-            return this;
-        }
-
         this.slots.addAll(slots);
-        return this;
-    }
-
-    public MenuItem withSourceInventory(@NonNull Inventory inventory) {
-        this.sourceInventories.add(inventory);
-        return this;
-    }
-
-    public MenuItem withSourceInventories(@NonNull List<Inventory> sourceInventories) {
-        this.sourceInventories.addAll(sourceInventories);
         return this;
     }
 
@@ -139,25 +79,17 @@ public class MenuItem implements Cloneable {
     }
 
     public MenuItem withInternalAction(@NonNull InternalClickAction actionType, @NonNull String data) {
-        if(locked) {
-            return this;
-        }
-
-        this.internalActions.put(actionType, data);
+        internalActions.put(actionType, data);
         return this;
     }
 
-    public MenuItem withInternalActions(@NonNull HashMap<InternalClickAction, String> internalActions) {
-        if(locked) {
-            return this;
-        }
-
+    public MenuItem withInternalActions(@NonNull Map<InternalClickAction, String> internalActions) {
         this.internalActions.putAll(internalActions);
         return this;
     }
 
     public MenuItem withClickRequirement(@NonNull ClickRequirement requirement) {
-        this.clickRequirements.add(requirement);
+        clickRequirements.add(requirement);
         return this;
     }
 
@@ -167,7 +99,7 @@ public class MenuItem implements Cloneable {
     }
 
     public MenuItem withViewRequirement(@NonNull MenuViewRequirement requirement) {
-        this.viewRequirements.add(requirement);
+        viewRequirements.add(requirement);
         return this;
     }
 
@@ -177,57 +109,32 @@ public class MenuItem implements Cloneable {
     }
 
     public MenuItem withMetadata(@NonNull String key, @NonNull Object value) {
-        if(locked) {
-            return this;
-        }
-
         metadata.put(key, value);
         return this;
     }
 
     public MenuItem withMetadata(@NonNull GenericHashMap<String, Object> metadata) {
-        if(locked) {
-            return this;
-        }
-
         this.metadata.putAll(metadata);
         return this;
     }
 
     public MenuItem item(@Nullable ItemStack item) {
-        if(locked) {
-            return this;
-        }
-
         this.item = item;
         return this;
     }
 
     public MenuItem filler(boolean filler) {
-        if(locked) {
-            return this;
-        }
-
         this.filler = filler;
         return this;
     }
 
     public MenuItem updatable(boolean updatable) {
-        if(locked) {
-            return this;
-        }
-
         this.updatable = updatable;
         return this;
     }
 
     public MenuItem saved(boolean saved) {
         this.saved = saved;
-        return this;
-    }
-
-    public MenuItem saveSlots(boolean saveSlots) {
-        this.saveSlots = saveSlots;
         return this;
     }
 
@@ -246,19 +153,31 @@ public class MenuItem implements Cloneable {
         return this;
     }
 
+    public MenuItem nextPageButton(@NonNull List<Integer> slots) {
+        return withSlots(slots)
+                .withViewRequirement(new NextPageViewRequirement())
+                .withAction(new NextPageAction());
+    }
+
+    public MenuItem previousPageButton(@NonNull List<Integer> slots) {
+        return withSlots(slots)
+                .withViewRequirement(new PreviousPageViewRequirement())
+                .withAction(new PreviousPageAction());
+    }
+
     public void onClick(@NonNull InventoryClickEvent event, @NonNull JavaPlugin plugin) {
         if (clickRequirements.stream().anyMatch(requirement -> !requirement.canClick((Player) event.getWhoClicked()))) {
             return;
         }
 
-        if(CooldownUtil.hasCooldown(id + "-" + event.getSlot(), event.getWhoClicked().getUniqueId())) {
+        if (CooldownUtil.hasCooldown(id + "-" + event.getSlot(), event.getWhoClicked().getUniqueId())) {
             return;
         }
 
         CooldownUtil.startCooldown(plugin, id + "-" + event.getSlot(), event.getWhoClicked().getUniqueId(), clickCooldownTime, clickCooldownUnit);
 
-        internalActions.keySet().forEach(action -> action.getAction().onClick(event, internalActions.get(action)));
-        new ArrayList<>(actions).forEach(action -> action.onClick(event));
+        internalActions.forEach((action, data) -> action.getAction().onClick(event, data));
+        actions.forEach(action -> action.onClick(event));
     }
 
     public boolean saveToConfig(@NonNull ConfigurationSection section) {
@@ -266,13 +185,13 @@ public class MenuItem implements Cloneable {
     }
 
     public boolean saveToConfig(@NonNull ConfigurationSection section, boolean overwrite) {
-        if(!overwrite && section.isSet(id) || !saved) {
+        if (!overwrite && section.isSet(id) || !saved) {
             return false;
         }
 
         ConfigurationSection itemSection = section.getConfigurationSection(id);
 
-        if(itemSection == null) {
+        if (itemSection == null) {
             itemSection = section.createSection(id);
         }
 
@@ -281,7 +200,7 @@ public class MenuItem implements Cloneable {
     }
 
     public static Optional<MenuItem> getFromConfig(@Nullable ConfigurationSection section) {
-        if(section == null) {
+        if (section == null) {
             return Optional.empty();
         }
 
@@ -292,16 +211,27 @@ public class MenuItem implements Cloneable {
         return clone(true);
     }
 
-    public MenuItem clone(boolean cloneAction) {
-        GenericHashMap<String, Object> metadata = new GenericHashMap<>();
-        metadata.putAll(this.metadata);
+    public MenuItem clone(boolean cloneActions) {
+        MenuItem copy = new MenuItem(id);
 
-        return new MenuItem(
-                id, new ArrayList<>(slots), new ArrayList<>(sourceInventories),
-                cloneAction ? new ArrayList<>(actions) : new ArrayList<>(),
-                new HashMap<>(internalActions), new ArrayList<>(clickRequirements),
-                new ArrayList<>(viewRequirements), metadata, item, itemUpdateProvider,
-                filler, updatable, false
-        );
+        copy.slots.addAll(slots);
+        copy.internalActions.putAll(internalActions);
+        copy.clickRequirements.addAll(clickRequirements);
+        copy.viewRequirements.addAll(viewRequirements);
+        copy.metadata.putAll(metadata);
+
+        if (cloneActions) {
+            copy.actions.addAll(actions);
+        }
+
+        copy.item = item;
+        copy.itemUpdateProvider = itemUpdateProvider;
+        copy.filler = filler;
+        copy.updatable = updatable;
+        copy.saved = false;
+        copy.clickCooldownTime = clickCooldownTime;
+        copy.clickCooldownUnit = clickCooldownUnit;
+        return copy;
     }
+
 }

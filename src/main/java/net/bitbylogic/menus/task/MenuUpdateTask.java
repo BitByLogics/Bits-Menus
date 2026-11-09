@@ -1,155 +1,48 @@
 package net.bitbylogic.menus.task;
 
+import com.tcoded.folialib.wrapper.task.WrappedTask;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import net.bitbylogic.menus.Menu;
-import net.bitbylogic.menus.data.MenuData;
 import net.bitbylogic.menus.MenuFlag;
-import net.bitbylogic.menus.inventory.MenuInventory;
-import net.bitbylogic.menus.item.MenuItem;
-import net.bitbylogic.utils.inventory.InventoryUtil;
-import net.bitbylogic.utils.item.ItemStackUtil;
-import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-import org.bukkit.Bukkit;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
+import net.bitbylogic.menus.MenuSession;
 import org.bukkit.plugin.java.JavaPlugin;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
 @RequiredArgsConstructor
 public class MenuUpdateTask {
 
-    private final Menu menu;
+    private final MenuSession session;
 
-    private int taskId = -1;
+    private WrappedTask task;
 
-    public void startTask(@NonNull JavaPlugin plugin) {
-        if (taskId != -1) {
+    public synchronized void startTask(@NonNull JavaPlugin plugin) {
+        if (task != null) {
             return;
         }
 
-        taskId = Bukkit.getScheduler().runTaskTimer(plugin, this::pushUpdates, 0, 5).getTaskId();
+        task = MenuScheduler.get(plugin).runTimer(this::pushUpdates, 1, 5);
     }
 
-    public void cancelTask() {
-        if (taskId == -1) {
+    public synchronized void cancelTask() {
+        if (task == null) {
             return;
         }
 
-        Bukkit.getScheduler().cancelTask(taskId);
-        taskId = -1;
+        task.cancel();
+        task = null;
+    }
+
+    public synchronized boolean isActive() {
+        return task != null;
     }
 
     private void pushUpdates() {
-        if (menu.getData().getMaxInventories() != -1 && !menu.getInventories().isEmpty()) {
-            Inventory finalInventory = menu.getInventories().getLast().getInventory();
+        session.appendPageIfFull();
 
-            if (!InventoryUtil.hasSpace(finalInventory, null, menu.getData().getValidSlots())) {
-                menu.generateNewInventory().ifPresent(menu.getInventories()::add);
-            }
-        }
-
-        if(menu.getData().hasFlag(MenuFlag.DISABLE_UPDATES)) {
+        if (session.getMenu().getData().hasFlag(MenuFlag.DISABLE_UPDATES)) {
             return;
         }
 
-        Iterator<MenuItem> itemIterator = menu.getItems().iterator();
-
-        while(itemIterator.hasNext()) {
-            MenuItem menuItem = itemIterator.next();
-
-            if (menuItem.getSlots().isEmpty()) {
-                menu.getData().getItemStorage().add(menuItem);
-                itemIterator.remove();
-                continue;
-            }
-
-            menuItem.getSourceInventories().forEach(inventory -> {
-                if (menuItem.getViewRequirements().stream().anyMatch(requirement -> !requirement.canView(inventory, menuItem, menu))) {
-                    menuItem.getSlots().forEach(slot -> {
-                        if(slot > inventory.getSize() - 1 || inventory.getItem(slot) == null || !ItemStackUtil.isSimilar(inventory.getItem(slot), menuItem.getItem(), true, true, true)) {
-                            return;
-                        }
-
-                        inventory.setItem(slot, null);
-                    });
-                    return;
-                }
-
-                List<Integer> slots = menuItem.getSlots();
-
-                if (menuItem.getItem() == null && menuItem.getItemUpdateProvider() == null) {
-                    slots.forEach(slot -> inventory.setItem(slot, null));
-                    return;
-                }
-
-                ItemStack item = menuItem.getItem().clone();
-                updateItemMeta(menu, item);
-
-                slots.forEach(slot -> {
-                    if (inventory.getItem(slot) != null && inventory.getItem(slot).getType() == item.getType()) {
-                        return;
-                    }
-
-                    inventory.setItem(slot, item);
-                });
-
-                if (!menuItem.isUpdatable()) {
-                    return;
-                }
-
-                ItemStack updatedItem = menuItem.getItemUpdateProvider() == null ? menuItem.getItem().clone() : menuItem.getItemUpdateProvider().requestItem(menuItem);
-                updateItemMeta(menu, updatedItem);
-
-                slots.forEach(slot -> inventory.setItem(slot, updatedItem));
-            });
-        }
-
-        for (MenuInventory menuInventory : menu.getInventories()) {
-            Inventory inventory = menuInventory.getInventory();
-
-            menu.getData().getFillerItem().ifPresent(fillerItem -> {
-                if(fillerItem.getItem() == null || fillerItem.getItem().getType().isAir()) {
-                    return;
-                }
-
-                fillerItem.setLocked(false);
-
-                for (int i = 0; i < inventory.getSize(); i++) {
-                    if (fillerItem.getSlots().contains(i) || inventory.getItem(i) != null || menu.getData().getValidSlots().contains(i)) {
-                        continue;
-                    }
-
-                    if(!fillerItem.getSourceInventories().contains(inventory)) {
-                        fillerItem.withSourceInventory(inventory);
-                    }
-
-                    fillerItem.withSlot(i);
-                    inventory.setItem(i, fillerItem.getItem());
-                }
-
-                fillerItem.setLocked(true);
-            });
-        }
-    }
-
-    private void updateItemMeta(@NonNull Menu menu, @NonNull ItemStack item) {
-        final MenuData data = menu.getData();
-
-        if (data.getPlaceholders().isEmpty()) {
-            return;
-        }
-
-        List<TagResolver.Single> placeholders = new ArrayList<>(data.getPlaceholders());
-
-        ItemStackUtil.updateItem(item, placeholders.toArray(new TagResolver.Single[]{}));
-    }
-
-    public boolean isActive() {
-        return taskId != -1;
+        session.refresh();
     }
 
 }
