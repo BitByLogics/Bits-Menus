@@ -99,6 +99,28 @@ class MenuSessionTest {
     }
 
     @Test
+    void setItemPlacesAtAFixedSlotOnlyForThatSession() {
+        Menu menu = createMenu(null);
+        MenuSession first = menu.createSession();
+        MenuSession second = menu.createSession();
+
+        assertTrue(first.setItem(22, createItem("barrier", 22)));
+
+        assertEquals(1, first.getItems(first.getInventory(), 22).size());
+        assertTrue(second.getItems(second.getInventory(), 22).isEmpty());
+        assertTrue(menu.getItems().isEmpty());
+    }
+
+    @Test
+    void setItemRejectsInvalidSlotsAndPages() {
+        MenuSession session = createMenu(null).createSession();
+
+        assertFalse(session.setItem(99, createItem("button", 99)));
+        assertFalse(session.setItem(-1, createItem("button", 0)));
+        assertFalse(session.setItem(5, 1, createItem("button", 1)));
+    }
+
+    @Test
     void itemsOutsideTheMenuAreSkipped() {
         Menu menu = createMenu(null);
         menu.addItem(createItem("button", 99));

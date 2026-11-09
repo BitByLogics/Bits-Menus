@@ -244,6 +244,33 @@ public class MenuSession implements InventoryHolder {
         }
     }
 
+    public boolean setItem(int slot, @NonNull MenuItem item) {
+        return setItem(0, slot, item);
+    }
+
+    public boolean setItem(int pageIndex, int slot, @NonNull MenuItem item) {
+        lock.lock();
+
+        try {
+            ensurePages();
+
+            if (pageIndex < 0 || pageIndex >= pages.size()) {
+                Bukkit.getLogger().warning("Page " + pageIndex + " of menu '" + menu.getId() + "' does not exist, unable to set item '" + item.getId() + "'.");
+                return false;
+            }
+
+            if (slot < 0 || slot >= menu.getSize()) {
+                Bukkit.getLogger().warning("Slot " + slot + " of item '" + item.getId() + "' is outside of menu '" + menu.getId() + "'.");
+                return false;
+            }
+
+            placeItem(pages.get(pageIndex), slot, item);
+            return true;
+        } finally {
+            lock.unlock();
+        }
+    }
+
     public void addItemStack(@NonNull ItemStack item) {
         lock.lock();
 

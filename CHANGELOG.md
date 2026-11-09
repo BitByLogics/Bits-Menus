@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.1.0
+
+### Added
+- `MenuSession#setItem(slot, item)` and `MenuSession#setItem(page, slot, item)` place a per-viewer item at a fixed slot without touching the shared `Menu`.
+
 ## 2.0.0
 
 ### Breaking

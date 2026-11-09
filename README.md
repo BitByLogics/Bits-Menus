@@ -34,7 +34,7 @@ A developer-friendly library for building interactive, paginated, config-driven 
 <dependency>
     <groupId>net.bitbylogic</groupId>
     <artifactId>bits-menus</artifactId>
-    <version>2.0.0</version>
+    <version>2.1.0</version>
 </dependency>
 ```
 
